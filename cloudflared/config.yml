@@ -1,0 +1,9 @@
+# =============================================================================
+# Cloudflare Tunnel — Ingress rules
+# Routes traffic from Cloudflare to internal nginx
+# =============================================================================
+
+ingress:
+  - hostname: "${TUNNEL_DOMAIN}"
+    service: http://nginx:80
+  - service: http_status:404

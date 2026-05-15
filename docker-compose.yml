@@ -38,9 +38,12 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: mining-cloudflared
     restart: unless-stopped
-    command: tunnel run
+    command: tunnel --config /etc/cloudflared/config.yml run
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:?error}
+      - TUNNEL_DOMAIN=${TUNNEL_DOMAIN:?error}
+    volumes:
+      - ./cloudflared/config.yml:/etc/cloudflared/config.yml:ro
     depends_on:
       nginx:
         condition: service_started
