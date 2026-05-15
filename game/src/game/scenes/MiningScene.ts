@@ -8,8 +8,16 @@ const MINING_RANGE = 80
 const MINERAL_COUNT = 8
 const MINERAL_SIZE = 64
 const MIN_SPACING = 90
-const AREA_W = 520
-const AREA_H = 380
+
+function getAreaDimensions(w: number, h: number): { w: number; h: number } {
+    const maxW = Math.min(520, w * 0.85)
+    const maxH = Math.min(380, h * 0.55)
+    const aspect = 520 / 380
+    let aw = maxW
+    let ah = maxW / aspect
+    if (ah > maxH) { ah = maxH; aw = maxH * aspect }
+    return { w: Math.round(aw), h: Math.round(ah) }
+}
 
 function randInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min
@@ -66,6 +74,8 @@ export class MiningScene extends Scene {
     private areaGfx!: GameObjects.Graphics
     private areaCX = 0
     private areaCY = 0
+    private areaW = 520
+    private areaH = 380
     private timeLeft = SESSION_DURATION
     private timerText!: GameObjects.Text
     private ended = false
@@ -90,12 +100,16 @@ export class MiningScene extends Scene {
         this.areaCX = this.scale.width / 2
         this.areaCY = this.scale.height / 2
 
-        generateGrassTexture(this, AREA_W, AREA_H)
+        const dims = getAreaDimensions(this.scale.width, this.scale.height)
+        this.areaW = dims.w
+        this.areaH = dims.h
+
+        generateGrassTexture(this, this.areaW, this.areaH)
 
         this.areaGfx = this.add.graphics()
         this.circleGfx = this.add.graphics()
 
-        this.timerText = this.add.text(this.areaCX, this.areaCY - AREA_H / 2 - 50, '', {
+        this.timerText = this.add.text(this.areaCX, this.areaCY - this.areaH / 2 - 50, '', {
             fontSize: '32px',
             fontStyle: 'bold',
             color: '#ffffff',
@@ -170,18 +184,18 @@ export class MiningScene extends Scene {
     private drawArea(): void {
         const cx = this.areaCX
         const cy = this.areaCY
-        const hw = AREA_W / 2
-        const hh = AREA_H / 2
+        const hw = this.areaW / 2
+        const hh = this.areaH / 2
 
         this.areaGfx.clear()
         this.areaGfx.fillStyle(0x000000, 0.3)
-        this.areaGfx.fillRoundedRect(cx - hw + 4, cy - hh + 4, AREA_W, AREA_H, 16)
+        this.areaGfx.fillRoundedRect(cx - hw + 4, cy - hh + 4, this.areaW, this.areaH, 16)
         this.areaGfx.fillStyle(0x3d6b34, 0.5)
-        this.areaGfx.fillRoundedRect(cx - hw, cy - hh, AREA_W, AREA_H, 16)
+        this.areaGfx.fillRoundedRect(cx - hw, cy - hh, this.areaW, this.areaH, 16)
         this.areaGfx.lineStyle(2, 0x5a4a3a, 0.5)
-        this.areaGfx.strokeRoundedRect(cx - hw, cy - hh, AREA_W, AREA_H, 16)
+        this.areaGfx.strokeRoundedRect(cx - hw, cy - hh, this.areaW, this.areaH, 16)
         this.areaGfx.lineStyle(1, 0x6b5b4b, 0.2)
-        this.areaGfx.strokeRoundedRect(cx - hw + 3, cy - hh + 3, AREA_W - 6, AREA_H - 6, 14)
+        this.areaGfx.strokeRoundedRect(cx - hw + 3, cy - hh + 3, this.areaW - 6, this.areaH - 6, 14)
     }
 
     private spawnAllNodes(): void {
@@ -206,8 +220,8 @@ export class MiningScene extends Scene {
     private findSpawnPosition(): { x: number; y: number } {
         const pad = 50
         const maxAttempts = 50
-        const hw = AREA_W / 2 - pad
-        const hh = AREA_H / 2 - pad
+        const hw = this.areaW / 2 - pad
+        const hh = this.areaH / 2 - pad
         const cx = this.areaCX
         const cy = this.areaCY
 

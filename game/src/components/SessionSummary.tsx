@@ -26,13 +26,13 @@ export function SessionSummary({ gains, onMineAgain, onUpgrades, onMenu }: Props
 
     return (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-            <div className="w-full max-w-md mx-4 rounded-3xl bg-gradient-to-b from-gray-800/95 to-gray-900/95 border border-amber-800/30 shadow-2xl shadow-black/60 p-8">
-                <div className="text-center mb-6">
-                    <div className="text-3xl mb-2">⛏️</div>
-                    <h2 className="text-xl font-bold text-amber-300">Resumen de la sesión</h2>
+            <div className="w-full max-w-sm sm:max-w-md mx-4 rounded-3xl bg-gradient-to-b from-gray-800/95 to-gray-900/95 border border-amber-800/30 shadow-2xl shadow-black/60 p-5 sm:p-8">
+                <div className="text-center mb-4 sm:mb-6">
+                    <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">⛏️</div>
+                    <h2 className="text-lg sm:text-xl font-bold text-amber-300">Resumen de la sesión</h2>
                 </div>
 
-                <div className="flex flex-col gap-2 mb-8">
+                <div className="flex flex-col gap-1.5 sm:gap-2 mb-6 sm:mb-8">
                     {(Object.keys(META) as ResourceType[]).map((key) => {
                         const amount = gains[key] ?? 0
                         return (
@@ -57,44 +57,40 @@ export function SessionSummary({ gains, onMineAgain, onUpgrades, onMenu }: Props
                     )}
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2.5 sm:gap-3">
                     <button
                         onClick={onMineAgain}
-                        className="w-full py-3.5 rounded-2xl text-base font-bold
+                        className="w-full py-3.5 sm:py-3.5 rounded-2xl text-base font-bold min-h-[48px]
                             bg-gradient-to-b from-amber-500 to-amber-700
-                            hover:from-amber-400 hover:to-amber-600
                             active:from-amber-600 active:to-amber-800
                             text-white border border-amber-400/40
-                            transition-all duration-150 cursor-pointer
-                            hover:scale-[1.02] active:scale-[0.98]
-                            shadow-lg shadow-amber-900/30"
+                            transition-all duration-100 cursor-pointer
+                            active:scale-[0.97] shadow-lg shadow-amber-900/30"
                     >
                         ⛏️ Minar otra vez
                     </button>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-2.5 sm:gap-3">
                         <button
                             onClick={onUpgrades}
-                            className="flex-1 py-3 rounded-2xl text-sm font-semibold
+                            className="flex-1 py-3 sm:py-3 rounded-2xl text-sm font-semibold min-h-[44px]
                                 bg-gradient-to-b from-gray-700/80 to-gray-800/80
-                                hover:from-gray-600/80 hover:to-gray-700/80
                                 active:from-gray-800/80 active:to-gray-900/80
                                 text-gray-300 border border-gray-600/40
-                                transition-all duration-150 cursor-pointer
-                                hover:scale-[1.02] active:scale-[0.98]"
+                                transition-all duration-100 cursor-pointer
+                                active:scale-[0.97]"
                         >
                             ⚡ Mejoras
                         </button>
 
                         <button
                             onClick={onMenu}
-                            className="flex-1 py-3 rounded-2xl text-sm font-semibold
+                            className="flex-1 py-3 sm:py-3 rounded-2xl text-sm font-semibold min-h-[44px]
                                 bg-gradient-to-b from-gray-700/80 to-gray-800/80
-                                hover:from-gray-600/80 hover:to-gray-700/80
                                 active:from-gray-800/80 active:to-gray-900/80
                                 text-gray-300 border border-gray-600/40
-                                transition-all duration-150 cursor-pointer
-                                hover:scale-[1.02] active:scale-[0.98]"
+                                transition-all duration-100 cursor-pointer
+                                active:scale-[0.97]"
                         >
                             ← Menú
                         </button>

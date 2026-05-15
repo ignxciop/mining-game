@@ -40,7 +40,7 @@ export function Sidebar({ onMenu }: Props) {
     const reset = useGameStore((s) => s.reset)
 
     return (
-        <div className="flex flex-col gap-4 w-52 h-full select-none py-3">
+        <div className="flex flex-col gap-4 w-52 h-full select-none py-3 max-sm:w-44">
             <div className="flex flex-col gap-4 flex-1 overflow-y-auto">
                 {/* Pickaxe Panel */}
                 <div className="rounded-2xl bg-gradient-to-b from-gray-800/90 to-gray-900/90 border border-amber-800/30 shadow-lg shadow-black/40 p-4">
