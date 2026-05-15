@@ -16,10 +16,10 @@ const STAT_LABELS: Record<string, string> = {
 }
 
 
-const COLS = 7
-const ROWS = 6
-const CELL_W = 140
-const CELL_H = 105
+const COLS = 8
+const ROWS = 8
+const CELL_W = 130
+const CELL_H = 96
 
 function nodePos(col: number, row: number) {
     return {
