@@ -6,17 +6,25 @@ export interface SkillNodeDef {
   id: string; name: string; description: string; icon: string
   maxLevel: number; costs: SkillCost[]; requires: string[]
   position: { col: number; row: number }
-  branch: 'damage' | 'speed' | 'luck' | 'utility' | 'specialization' | 'legendary'
+  branch: 'basic' | 'gems' | 'crystals' | 'rares' | 'prestige' | 'legendary' | 'damage' | 'speed' | 'luck' | 'utility' | 'specialization'
   upgradesStat: string; upgradeValue: number
+  unlocksMineral?: MineralId
+  excludes?: string[]
+  isTransformative?: boolean
 }
 
 const BRANCH_COLORS: Record<string, string> = {
+  basic: 'from-stone-600/80 to-stone-800/80 border-stone-500/50',
+  gems: 'from-pink-700/80 to-pink-900/80 border-pink-600/50',
+  crystals: 'from-sky-700/80 to-sky-900/80 border-sky-600/50',
+  rares: 'from-fuchsia-700/80 to-fuchsia-900/80 border-fuchsia-600/50',
+  prestige: 'from-violet-700/80 to-violet-900/80 border-violet-600/50',
+  legendary: 'from-yellow-600/80 to-yellow-800/80 border-yellow-500/50',
   damage: 'from-red-700/80 to-red-900/80 border-red-600/50',
   speed: 'from-cyan-700/80 to-cyan-900/80 border-cyan-600/50',
   luck: 'from-emerald-700/80 to-emerald-900/80 border-emerald-600/50',
   utility: 'from-purple-700/80 to-purple-900/80 border-purple-600/50',
   specialization: 'from-orange-700/80 to-orange-900/80 border-orange-600/50',
-  legendary: 'from-yellow-600/80 to-yellow-800/80 border-yellow-500/50',
 }
 
 export function getBranchColor(branch: string): string {
@@ -25,41 +33,73 @@ export function getBranchColor(branch: string): string {
 
 export const SKILL_TREE: SkillNodeDef[] = [
   // ═══ ROOT ═══
-  { id: 'sharp_pick', name: 'Pico Afilado', description: '+1 daño base', icon: '⛏️', maxLevel: 1, costs: [{ resource: 'clay', amount: 5 }], requires: [], position: { col: 2, row: 0 }, branch: 'damage', upgradesStat: 'pickaxe_power', upgradeValue: 1 },
+  { id: 'sharp_pick', name: 'Pico Afilado', description: '+1 daño. Todo comienza aquí', icon: '⛏️', maxLevel: 1, costs: [{ resource: 'clay', amount: 3 }], requires: [], position: { col: 3, row: 0 }, branch: 'basic', upgradesStat: 'pickaxe_power', upgradeValue: 1 },
+
+  // ═══ BASIC BRANCH (stone) — unlocks copper, iron, coal_crystal, cinnabar, sulfur ═══
+  { id: 'copper_tools', name: 'Herramientas de Cobre', description: 'Desbloquea el Cobre', icon: '🥉', maxLevel: 1, costs: [{ resource: 'clay', amount: 15 }, { resource: 'shale', amount: 10 }], requires: ['sharp_pick'], position: { col: 0, row: 1 }, branch: 'basic', upgradesStat: 'pickaxe_power', upgradeValue: 1, unlocksMineral: 'copper' },
+  { id: 'deep_excavation', name: 'Excavación Profunda', description: 'Desbloquea el Hierro', icon: '⛏️', maxLevel: 1, costs: [{ resource: 'clay', amount: 25 }, { resource: 'copper', amount: 5 }], requires: ['copper_tools'], position: { col: 0, row: 2 }, branch: 'basic', upgradesStat: 'pickaxe_power', upgradeValue: 1, unlocksMineral: 'iron' },
+  { id: 'coal_crystals_node', name: 'Cristales de Carbón', description: 'Desbloquea Cristal de Carbón', icon: '💎', maxLevel: 1, costs: [{ resource: 'copper', amount: 10 }, { resource: 'iron', amount: 3 }], requires: ['deep_excavation'], position: { col: 0, row: 3 }, branch: 'basic', upgradesStat: 'speed', upgradeValue: 1, unlocksMineral: 'coal_crystal' },
+  { id: 'toxic_mining', name: 'Minería Tóxica', description: 'Desbloquea Azufre y Cinabrio', icon: '☠️', maxLevel: 1, costs: [{ resource: 'iron', amount: 8 }, { resource: 'copper', amount: 10 }], requires: ['deep_excavation'], position: { col: 0, row: 4 }, branch: 'basic', upgradesStat: 'luck', upgradeValue: 1, unlocksMineral: 'sulfur' },
+
+  // ═══ GEMS BRANCH (pink) — unlocks silver, obsidian, jade, malachite ═══
+  { id: 'mineral_polish', name: 'Pulido Mineral', description: 'Desbloquea la Plata', icon: '✨', maxLevel: 1, costs: [{ resource: 'copper', amount: 12 }, { resource: 'iron', amount: 5 }], requires: ['sharp_pick'], position: { col: 1, row: 1 }, branch: 'gems', upgradesStat: 'fortune', upgradeValue: 1, unlocksMineral: 'silver' },
+  { id: 'ancient_rocks', name: 'Rocas Antiguas', description: 'Desbloquea Obsidiana', icon: '🪨', maxLevel: 1, costs: [{ resource: 'silver', amount: 8 }, { resource: 'iron', amount: 8 }], requires: ['mineral_polish'], position: { col: 1, row: 2 }, branch: 'gems', upgradesStat: 'pickaxe_power', upgradeValue: 2, unlocksMineral: 'obsidian' },
+  { id: 'natural_energy', name: 'Energía Natural', description: 'Desbloquea Jade', icon: '🌿', maxLevel: 1, costs: [{ resource: 'silver', amount: 10 }, { resource: 'obsidian', amount: 5 }], requires: ['ancient_rocks'], position: { col: 1, row: 3 }, branch: 'gems', upgradesStat: 'luck', upgradeValue: 1, unlocksMineral: 'jade' },
+  { id: 'green_veins', name: 'Vetas Verdes', description: 'Desbloquea Malaquita', icon: '🟢', maxLevel: 1, costs: [{ resource: 'jade', amount: 5 }, { resource: 'silver', amount: 8 }], requires: ['natural_energy'], position: { col: 1, row: 4 }, branch: 'gems', upgradesStat: 'fortune', upgradeValue: 1, unlocksMineral: 'malachite' },
+
+  // ═══ CRYSTALS BRANCH (sky) — unlocks lapis, turquoise, rose_quartz, citrine ═══
+  { id: 'blue_resonance', name: 'Resonancia Azul', description: 'Desbloquea Lapislázuli', icon: '🔵', maxLevel: 1, costs: [{ resource: 'silver', amount: 10 }, { resource: 'iron', amount: 10 }], requires: ['sharp_pick'], position: { col: 2, row: 1 }, branch: 'crystals', upgradesStat: 'luck', upgradeValue: 2, unlocksMineral: 'lapis_lazuli' },
+  { id: 'turquoise_core', name: 'Núcleo Turquesa', description: 'Desbloquea Turquesa', icon: '🟦', maxLevel: 1, costs: [{ resource: 'lapis_lazuli', amount: 5 }, { resource: 'silver', amount: 10 }], requires: ['blue_resonance'], position: { col: 2, row: 2 }, branch: 'crystals', upgradesStat: 'mining_range', upgradeValue: 10, unlocksMineral: 'turquoise' },
+  { id: 'vital_crystals', name: 'Cristales Vitales', description: 'Desbloquea Cuarzo Rosa', icon: '🩷', maxLevel: 1, costs: [{ resource: 'turquoise', amount: 5 }, { resource: 'lapis_lazuli', amount: 5 }], requires: ['turquoise_core'], position: { col: 2, row: 3 }, branch: 'crystals', upgradesStat: 'efficiency', upgradeValue: 1, unlocksMineral: 'rose_quartz' },
+  { id: 'golden_prosperity', name: 'Prosperidad Dorada', description: 'Desbloquea Citrino', icon: '🟡', maxLevel: 1, costs: [{ resource: 'citrine', amount: 1 }, { resource: 'rose_quartz', amount: 3 }], requires: ['vital_crystals'], position: { col: 2, row: 4 }, branch: 'crystals', upgradesStat: 'fortune', upgradeValue: 2, unlocksMineral: 'citrine' },
+
+  // ═══ RARES BRANCH (fuchsia) — unlocks fluorite, rhodonite, amber, blue_topaz ═══
+  { id: 'resonant_caverns', name: 'Cavernas Resonantes', description: 'Desbloquea Fluorita', icon: '🟣', maxLevel: 1, costs: [{ resource: 'obsidian', amount: 8 }, { resource: 'jade', amount: 5 }], requires: ['sharp_pick'], position: { col: 4, row: 1 }, branch: 'rares', upgradesStat: 'luck', upgradeValue: 1, unlocksMineral: 'fluorite' },
+  { id: 'berserker_core', name: 'Núcleo Berserker', description: 'Desbloquea Rodonita', icon: '❤️‍🔥', maxLevel: 1, costs: [{ resource: 'fluorite', amount: 5 }, { resource: 'obsidian', amount: 8 }], requires: ['resonant_caverns'], position: { col: 4, row: 2 }, branch: 'rares', upgradesStat: 'crit_chance', upgradeValue: 5, unlocksMineral: 'rhodonite' },
+  { id: 'ancient_fossils', name: 'Fósiles Antiguos', description: 'Desbloquea Ámbar', icon: '🦴', maxLevel: 1, costs: [{ resource: 'rhodonite', amount: 3 }, { resource: 'fluorite', amount: 5 }], requires: ['berserker_core'], position: { col: 4, row: 3 }, branch: 'rares', upgradesStat: 'efficiency', upgradeValue: 1, unlocksMineral: 'amber' },
+  { id: 'miner_eye', name: 'Ojo del Minero', description: 'Desbloquea Topacio Azul', icon: '👁️', maxLevel: 1, costs: [{ resource: 'amber', amount: 3 }, { resource: 'rhodonite', amount: 3 }], requires: ['ancient_fossils'], position: { col: 4, row: 4 }, branch: 'rares', upgradesStat: 'crit_damage', upgradeValue: 2, unlocksMineral: 'blue_topaz' },
+
+  // ═══ PRESTIGE BRANCH (violet) — unlocks emerald, aquamarine, sapphire, amethyst ═══
+  { id: 'emerald_garden', name: 'Jardín Esmeralda', description: 'Desbloquea Esmeralda (requiere prestige)', icon: '💚', maxLevel: 1, costs: [{ resource: 'blue_topaz', amount: 5 }, { resource: 'amber', amount: 5 }], requires: ['sharp_pick'], position: { col: 5, row: 1 }, branch: 'prestige', upgradesStat: 'fortune', upgradeValue: 1, unlocksMineral: 'emerald' },
+  { id: 'oceanic_crown', name: 'Corona Oceánica', description: 'Desbloquea Aguamarina', icon: '🌊', maxLevel: 1, costs: [{ resource: 'emerald', amount: 3 }, { resource: 'sapphire', amount: 2 }], requires: ['emerald_garden'], position: { col: 5, row: 2 }, branch: 'prestige', upgradesStat: 'mining_range', upgradeValue: 15, unlocksMineral: 'aquamarine' },
+  { id: 'crystalized_time', name: 'Tiempo Cristalizado', description: 'Desbloquea Zafiro', icon: '⏳', maxLevel: 1, costs: [{ resource: 'aquamarine', amount: 3 }, { resource: 'emerald', amount: 3 }], requires: ['oceanic_crown'], position: { col: 5, row: 3 }, branch: 'prestige', upgradesStat: 'time_bonus', upgradeValue: 2, unlocksMineral: 'sapphire' },
+  { id: 'arcane_ritual', name: 'Ritual Arcano', description: 'Desbloquea Amatista', icon: '🔮', maxLevel: 1, costs: [{ resource: 'sapphire', amount: 3 }, { resource: 'amethyst', amount: 1 }], requires: ['crystalized_time'], position: { col: 5, row: 4 }, branch: 'prestige', upgradesStat: 'luck', upgradeValue: 2, unlocksMineral: 'amethyst' },
+
+  // ═══ LEGENDARY BRANCH (yellow) — unlocks sunstone, void, moonstone ═══
+  { id: 'solar_heart', name: 'Corazón Solar', description: 'Desbloquea Piedra Solar (prestige 2+)', icon: '☀️', maxLevel: 1, costs: [{ resource: 'emerald', amount: 5 }, { resource: 'aquamarine', amount: 5 }], requires: ['sharp_pick'], position: { col: 6, row: 1 }, branch: 'legendary', upgradesStat: 'pickaxe_power', upgradeValue: 5, unlocksMineral: 'sunstone' },
+  { id: 'void_portal', name: 'Portal del Vacío', description: 'Desbloquea Vacío', icon: '🕳️', maxLevel: 1, costs: [{ resource: 'sunstone', amount: 3 }, { resource: 'sapphire', amount: 5 }], requires: ['solar_heart'], position: { col: 6, row: 2 }, branch: 'legendary', upgradesStat: 'pickaxe_power', upgradeValue: 5, unlocksMineral: 'void' },
+  { id: 'lunar_eclipse', name: 'Eclipse Lunar', description: 'Desbloquea Piedra Lunar', icon: '🌙', maxLevel: 1, costs: [{ resource: 'void', amount: 3 }, { resource: 'sunstone', amount: 3 }], requires: ['void_portal'], position: { col: 6, row: 3 }, branch: 'legendary', upgradesStat: 'time_bonus', upgradeValue: 3, unlocksMineral: 'moonstone' },
 
   // ═══ DAMAGE ═══
-  { id: 'strong_swing', name: 'Golpe Fuerte', description: '+1 daño base', icon: '⚔️', maxLevel: 1, costs: [{ resource: 'clay', amount: 20 }, { resource: 'copper', amount: 5 }], requires: ['sharp_pick'], position: { col: 0, row: 1 }, branch: 'damage', upgradesStat: 'pickaxe_power', upgradeValue: 1 },
-  { id: 'giant_strike', name: 'Golpe Gigante', description: '+2 daño base', icon: '💥', maxLevel: 1, costs: [{ resource: 'copper', amount: 20 }, { resource: 'iron', amount: 5 }], requires: ['strong_swing'], position: { col: 0, row: 2 }, branch: 'damage', upgradesStat: 'pickaxe_power', upgradeValue: 2 },
-  { id: 'crit_chance', name: 'Golpe Crítico', description: '+5% crit por nivel', icon: '🎯', maxLevel: 3, costs: [{ resource: 'copper', amount: 10 }, { resource: 'iron', amount: 3 }], requires: ['strong_swing'], position: { col: 0, row: 3 }, branch: 'damage', upgradesStat: 'crit_chance', upgradeValue: 5 },
+  { id: 'strong_swing', name: 'Golpe Fuerte', description: '+2 daño base', icon: '⚔️', maxLevel: 1, costs: [{ resource: 'iron', amount: 10 }, { resource: 'copper', amount: 15 }], requires: ['copper_tools'], position: { col: 3, row: 1 }, branch: 'damage', upgradesStat: 'pickaxe_power', upgradeValue: 2 },
+  { id: 'giant_strike', name: 'Golpe Gigante', description: '+5 daño base', icon: '💥', maxLevel: 1, costs: [{ resource: 'obsidian', amount: 8 }, { resource: 'iron', amount: 20 }], requires: ['strong_swing'], position: { col: 3, row: 2 }, branch: 'damage', upgradesStat: 'pickaxe_power', upgradeValue: 5 },
+  { id: 'titan_strike', name: 'Golpe del Titán', description: '+12 daño base', icon: '🗿', maxLevel: 1, costs: [{ resource: 'jade', amount: 8 }, { resource: 'obsidian', amount: 12 }], requires: ['giant_strike'], position: { col: 3, row: 3 }, branch: 'damage', upgradesStat: 'pickaxe_power', upgradeValue: 12 },
+  { id: 'crit_chance_base', name: 'Ojo Crítico', description: '+10% prob. crítico', icon: '🎯', maxLevel: 1, costs: [{ resource: 'silver', amount: 10 }, { resource: 'iron', amount: 15 }], requires: ['strong_swing'], position: { col: 2, row: 2 }, branch: 'damage', upgradesStat: 'crit_chance', upgradeValue: 10, excludes: ['quick_hands'] },
+  { id: 'crit_damage_up', name: 'Potencia Crítica', description: '+0.5 daño crítico por nivel', icon: '💢', maxLevel: 5, costs: [{ resource: 'blue_topaz', amount: 2 }, { resource: 'iron', amount: 10 }], requires: ['crit_chance_base'], position: { col: 2, row: 3 }, branch: 'damage', upgradesStat: 'crit_damage', upgradeValue: 1 },
 
   // ═══ SPEED ═══
-  { id: 'quick_hands', name: 'Manos Rápidas', description: '+1 speed', icon: '⚡', maxLevel: 1, costs: [{ resource: 'shale', amount: 15 }, { resource: 'copper', amount: 3 }], requires: ['sharp_pick'], position: { col: 1, row: 1 }, branch: 'speed', upgradesStat: 'speed', upgradeValue: 1 },
-  { id: 'swift_miner', name: 'Minero Veloz', description: '+2 speed', icon: '🌪️', maxLevel: 1, costs: [{ resource: 'copper', amount: 15 }, { resource: 'iron', amount: 5 }], requires: ['quick_hands'], position: { col: 1, row: 2 }, branch: 'speed', upgradesStat: 'speed', upgradeValue: 2 },
-  { id: 'blitz', name: 'Ráfaga', description: '+3 speed', icon: '💨', maxLevel: 1, costs: [{ resource: 'iron', amount: 15 }, { resource: 'silver', amount: 3 }], requires: ['swift_miner'], position: { col: 1, row: 3 }, branch: 'speed', upgradesStat: 'speed', upgradeValue: 3 },
+  { id: 'quick_hands', name: 'Manos Rápidas', description: '+2 speed', icon: '⚡', maxLevel: 1, costs: [{ resource: 'copper', amount: 10 }, { resource: 'shale', amount: 20 }], requires: ['copper_tools'], position: { col: 4, row: 1 }, branch: 'speed', upgradesStat: 'speed', upgradeValue: 2, excludes: ['crit_chance_base'] },
+  { id: 'swift_miner', name: 'Minero Veloz', description: '+4 speed', icon: '🌪️', maxLevel: 1, costs: [{ resource: 'silver', amount: 8 }, { resource: 'copper', amount: 25 }], requires: ['quick_hands'], position: { col: 4, row: 2 }, branch: 'speed', upgradesStat: 'speed', upgradeValue: 4 },
+  { id: 'blitz', name: 'Ráfaga', description: '+7 speed', icon: '💨', maxLevel: 1, costs: [{ resource: 'jade', amount: 8 }, { resource: 'silver', amount: 12 }], requires: ['swift_miner'], position: { col: 4, row: 3 }, branch: 'speed', upgradesStat: 'speed', upgradeValue: 7 },
 
   // ═══ LUCK ═══
-  { id: 'lucky_find', name: 'Hallazgo Suerte', description: '+1 luck', icon: '🍀', maxLevel: 1, costs: [{ resource: 'shale', amount: 15 }, { resource: 'copper', amount: 3 }], requires: ['sharp_pick'], position: { col: 3, row: 1 }, branch: 'luck', upgradesStat: 'luck', upgradeValue: 1 },
-  { id: 'rare_hunter', name: 'Cazador de Rarezas', description: '+2 luck', icon: '💎', maxLevel: 1, costs: [{ resource: 'copper', amount: 15 }, { resource: 'iron', amount: 5 }], requires: ['lucky_find'], position: { col: 3, row: 2 }, branch: 'luck', upgradesStat: 'luck', upgradeValue: 2 },
-  { id: 'treasure_magnet', name: 'Imán de Tesoros', description: '+3 luck', icon: '🧲', maxLevel: 1, costs: [{ resource: 'iron', amount: 15 }, { resource: 'silver', amount: 5 }], requires: ['rare_hunter'], position: { col: 3, row: 3 }, branch: 'luck', upgradesStat: 'luck', upgradeValue: 3 },
+  { id: 'lucky_find', name: 'Hallazgo Suerte', description: '+2 luck', icon: '🍀', maxLevel: 1, costs: [{ resource: 'lapis_lazuli', amount: 5 }, { resource: 'copper', amount: 15 }], requires: ['blue_resonance'], position: { col: 5, row: 1 }, branch: 'luck', upgradesStat: 'luck', upgradeValue: 2 },
+  { id: 'rare_hunter', name: 'Cazador de Rarezas', description: '+4 luck', icon: '💎', maxLevel: 1, costs: [{ resource: 'turquoise', amount: 5 }, { resource: 'lapis_lazuli', amount: 8 }], requires: ['lucky_find'], position: { col: 5, row: 2 }, branch: 'luck', upgradesStat: 'luck', upgradeValue: 4 },
+  { id: 'treasure_magnet', name: 'Imán de Tesoros', description: '+7 luck', icon: '🧲', maxLevel: 1, costs: [{ resource: 'emerald', amount: 3 }, { resource: 'turquoise', amount: 5 }], requires: ['rare_hunter'], position: { col: 5, row: 3 }, branch: 'luck', upgradesStat: 'luck', upgradeValue: 7 },
 
   // ═══ UTILITY ═══
-  { id: 'efficiency', name: 'Eficiencia Minera', description: '+1 recurso extra por mineral', icon: '🔧', maxLevel: 1, costs: [{ resource: 'clay', amount: 25 }, { resource: 'copper', amount: 10 }], requires: ['sharp_pick'], position: { col: 4, row: 1 }, branch: 'utility', upgradesStat: 'efficiency', upgradeValue: 1 },
-  { id: 'magnet', name: 'Imán Mineral', description: '+10px rango por nivel', icon: '🧲', maxLevel: 2, costs: [{ resource: 'copper', amount: 20 }, { resource: 'iron', amount: 8 }], requires: ['efficiency'], position: { col: 4, row: 2 }, branch: 'utility', upgradesStat: 'mining_range', upgradeValue: 10 },
-  { id: 'fortune', name: 'Fortuna', description: '+20% duplicar recurso por nivel', icon: '💰', maxLevel: 1, costs: [{ resource: 'iron', amount: 20 }, { resource: 'silver', amount: 10 }], requires: ['efficiency'], position: { col: 4, row: 3 }, branch: 'utility', upgradesStat: 'fortune', upgradeValue: 1 },
-  { id: 'explosion_master', name: 'Maestro Explosivo', description: 'Explosiones sulfur ×2 radio', icon: '💣', maxLevel: 1, costs: [{ resource: 'sulfur', amount: 15 }, { resource: 'cinnabar', amount: 5 }], requires: ['fortune'], position: { col: 4, row: 4 }, branch: 'utility', upgradesStat: 'explosion_radius', upgradeValue: 1 },
+  { id: 'efficiency_node', name: 'Eficiencia Minera', description: '×1.35 recursos', icon: '🔧', maxLevel: 1, costs: [{ resource: 'rose_quartz', amount: 5 }, { resource: 'turquoise', amount: 5 }], requires: ['vital_crystals'], position: { col: 6, row: 1 }, branch: 'utility', upgradesStat: 'efficiency', upgradeValue: 1 },
+  { id: 'magnet_node', name: 'Imán Mineral', description: '+15px rango x2 niveles', icon: '🧲', maxLevel: 2, costs: [{ resource: 'citrine', amount: 3 }, { resource: 'rose_quartz', amount: 5 }], requires: ['efficiency_node'], position: { col: 6, row: 2 }, branch: 'utility', upgradesStat: 'mining_range', upgradeValue: 15 },
 
-  // ═══ SPECIALIZATION ═══
-  { id: 'coal_affinity', name: 'Afinidad de Carbón', description: '+50% spawn coal_crystal', icon: '🔥', maxLevel: 1, costs: [{ resource: 'coal_crystal', amount: 10 }], requires: ['efficiency'], position: { col: 5, row: 2 }, branch: 'specialization', upgradesStat: 'coal_affinity', upgradeValue: 1 },
-  { id: 'obsidian_heart', name: 'Corazón de Obsidiana', description: '+1 daño vs minerales resistentes', icon: '🪨', maxLevel: 1, costs: [{ resource: 'obsidian', amount: 10 }], requires: ['coal_affinity'], position: { col: 5, row: 3 }, branch: 'specialization', upgradesStat: 'obsidian_pierce', upgradeValue: 1 },
-  { id: 'jade_chain', name: 'Cadena de Jade', description: 'Chain jade sube a 50%', icon: '⛓️', maxLevel: 1, costs: [{ resource: 'jade', amount: 10 }], requires: ['obsidian_heart'], position: { col: 5, row: 4 }, branch: 'specialization', upgradesStat: 'jade_chain_bonus', upgradeValue: 20 },
-  { id: 'void_touched', name: 'Tocado por el Vacío', description: '+1 mineral void siempre', icon: '🌌', maxLevel: 1, costs: [{ resource: 'void', amount: 3 }], requires: ['jade_chain'], position: { col: 6, row: 3 }, branch: 'specialization', upgradesStat: 'void_spawn', upgradeValue: 1 },
-  { id: 'sun_chosen', name: 'Elegido Solar', description: 'Sunstone dura 12s', icon: '☀️', maxLevel: 1, costs: [{ resource: 'sunstone', amount: 2 }], requires: ['void_touched'], position: { col: 6, row: 4 }, branch: 'specialization', upgradesStat: 'sun_duration', upgradeValue: 4 },
+  // ═══ SPECIALIZATION — Excluyentes ═══
+  { id: 'void_touched', name: 'Tocado por el Vacío', description: '+50% daño -30% velocidad', icon: '🌌', maxLevel: 1, costs: [{ resource: 'void', amount: 5 }], requires: ['titan_strike', 'blitz', 'treasure_magnet', 'magnet_node'], position: { col: 3, row: 4 }, branch: 'specialization', upgradesStat: 'void_pact', upgradeValue: 1, isTransformative: true, excludes: ['sun_chosen'] },
+  { id: 'sun_chosen', name: 'Elegido Solar', description: '+50% velocidad -20% daño', icon: '☀️', maxLevel: 1, costs: [{ resource: 'sunstone', amount: 3 }], requires: ['titan_strike', 'blitz', 'treasure_magnet', 'magnet_node'], position: { col: 3, row: 4 }, branch: 'specialization', upgradesStat: 'sun_pact', upgradeValue: 1, isTransformative: true, excludes: ['void_touched'] },
+  { id: 'void_empower', name: 'Empoderamiento Vacío', description: '+100% daño', icon: '🕳️', maxLevel: 1, costs: [{ resource: 'void', amount: 10 }], requires: ['void_touched'], position: { col: 2, row: 5 }, branch: 'specialization', upgradesStat: 'pickaxe_power', upgradeValue: 10 },
+  { id: 'sun_empower', name: 'Empoderamiento Solar', description: '+100% velocidad', icon: '✨', maxLevel: 1, costs: [{ resource: 'sunstone', amount: 6 }], requires: ['sun_chosen'], position: { col: 4, row: 5 }, branch: 'specialization', upgradesStat: 'speed', upgradeValue: 10 },
 
-  // ═══ LEGENDARY (requiere prestige) ═══
-  { id: 'eternal_pick', name: 'Pico Eterno', description: '+5 daño permanente (prestige)', icon: '✨', maxLevel: 1, costs: [{ resource: 'void', amount: 1 }], requires: ['sharp_pick'], position: { col: 2, row: 5 }, branch: 'legendary', upgradesStat: 'pickaxe_power', upgradeValue: 5 },
-  { id: 'time_warper', name: 'Distorsión Temporal', description: '+3s a todas las runs', icon: '⏳', maxLevel: 1, costs: [{ resource: 'moonstone', amount: 1 }], requires: ['sharp_pick'], position: { col: 3, row: 5 }, branch: 'legendary', upgradesStat: 'time_bonus', upgradeValue: 3 },
-  { id: 'rare_magnet', name: 'Imán de Rarezas', description: '+30% spawn minerales raros', icon: '🧿', maxLevel: 1, costs: [{ resource: 'amethyst', amount: 1 }], requires: ['sharp_pick'], position: { col: 1, row: 5 }, branch: 'legendary', upgradesStat: 'rare_magnet', upgradeValue: 30 },
-  { id: 'cosmic_miner', name: 'Minero Cósmico', description: 'Efectos de minerales ×1.5 potencia', icon: '🌟', maxLevel: 1, costs: [{ resource: 'emerald', amount: 1 }], requires: ['sharp_pick'], position: { col: 2, row: 6 }, branch: 'legendary', upgradesStat: 'cosmic_power', upgradeValue: 1 },
+  // ═══ LEGENDARY EXTRA (post-prestige) ═══
+  { id: 'eternal_pick', name: 'Pico Eterno', description: '+15 daño permanente', icon: '✨', maxLevel: 1, costs: [{ resource: 'void', amount: 3 }], requires: ['void_portal'], position: { col: 6, row: 4 }, branch: 'legendary', upgradesStat: 'pickaxe_power', upgradeValue: 15 },
+  { id: 'cosmic_miner', name: 'Minero Cósmico', description: 'Todos los efectos ×2', icon: '🌟', maxLevel: 1, costs: [{ resource: 'moonstone', amount: 5 }, { resource: 'sunstone', amount: 5 }], requires: ['lunar_eclipse', 'eternal_pick'], position: { col: 3, row: 5 }, branch: 'legendary', upgradesStat: 'cosmic_power', upgradeValue: 1, isTransformative: true },
 ]
 
 export function getSkillById(id: string): SkillNodeDef | undefined {

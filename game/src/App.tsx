@@ -6,7 +6,7 @@ import { MainMenu } from './components/MainMenu'
 import { SessionSummary } from './components/SessionSummary'
 import { SkillTreeView } from './components/SkillTreeView'
 import { PrestigeView } from './components/PrestigeView'
-import { useGameStore, ResourceType } from './store/gameStore'
+import { useGameStore } from './store/gameStore'
 import { EventBus } from './game/EventBus'
 
 type Screen = 'menu' | 'mining' | 'summary' | 'upgrades' | 'prestige'
@@ -14,8 +14,8 @@ type Screen = 'menu' | 'mining' | 'summary' | 'upgrades' | 'prestige'
 function App() {
     const phaserRef = useRef<IRefPhaserGame | null>(null)
     const [screen, setScreen] = useState<Screen>('menu')
-    const [gains, setGains] = useState<Record<ResourceType, number> | null>(null)
-    const sessionStart = useRef<Record<ResourceType, number> | null>(null)
+    const [gains, setGains] = useState<Record<string, number> | null>(null)
+    const sessionStart = useRef<Record<string, number> | null>(null)
     const [isMobile] = useState(() => window.innerWidth < 768)
 
     const startSession = useCallback(() => {
@@ -41,7 +41,7 @@ function App() {
             const calcGains: Record<string, number> = {}
             const allKeys = new Set([...Object.keys(start), ...Object.keys(current)])
             for (const key of allKeys) {
-                const diff = (current[key as ResourceType] ?? 0) - (start[key as ResourceType] ?? 0)
+                const diff = (current[key as string] ?? 0) - (start[key as string] ?? 0)
                 if (diff > 0) calcGains[key] = diff
             }
             setGains(calcGains)

@@ -21,7 +21,7 @@ export function PrestigeView({ onBack }: Props) {
   const buyPrestigeUpgrade = useGameStore((s) => s.buyPrestigeUpgrade)
   const [confirming, setConfirming] = useState(false)
 
-  const pointsIfReset = getPrestigePoints(lifetimeStats.steelAccumulated)
+  const pointsIfReset = getPrestigePoints(lifetimeStats.totalResourceValue)
   return (
     <div className="flex flex-col min-h-dvh bg-[#0a0a0f] text-white select-none">
       {/* Header */}
@@ -40,20 +40,20 @@ export function PrestigeView({ onBack }: Props) {
         <div className="text-3xl mb-2">🌟</div>
         <div className="text-sm text-gray-400">Nivel Prestige: <span className="text-purple-300 font-bold">{prestigeLevel}</span></div>
         <div className="text-xs text-gray-500 mt-1">Fragmentos de Vacío: <span className="text-amber-400 font-bold font-mono">{prestigePoints}</span></div>
-        <div className="text-xs text-gray-600 mt-2">Acero total acumulado: {lifetimeStats.steelAccumulated}</div>
+        <div className="text-xs text-gray-600 mt-2">Valor total acumulado: {lifetimeStats.totalResourceValue}</div>
       </div>
 
       {/* Prestige button */}
       <div className="px-4 py-4 text-center border-b border-gray-800/50">
         {!confirming ? (
           <button onClick={() => setConfirming(true)}
-            disabled={lifetimeStats.steelAccumulated < 100}
+            disabled={lifetimeStats.totalResourceValue < 1000}
             className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-100 active:scale-[0.97]
-              ${lifetimeStats.steelAccumulated >= 100
+              ${lifetimeStats.totalResourceValue >= 1000
                 ? 'bg-gradient-to-b from-purple-600 to-purple-800 text-white border border-purple-500/40 shadow-lg shadow-purple-900/30'
                 : 'bg-gray-800/50 text-gray-600 border border-gray-700/40 cursor-not-allowed'}`}
           >
-            🌟 Hacer Prestige {lifetimeStats.steelAccumulated >= 100 ? `(+${pointsIfReset} fragmentos)` : '(100 acero requerido)'}
+            🌟 Hacer Prestige {lifetimeStats.totalResourceValue >= 1000 ? `(+${pointsIfReset} fragmentos)` : '(1,000 valor requerido)'}
           </button>
         ) : (
           <div className="flex flex-col gap-2 items-center">

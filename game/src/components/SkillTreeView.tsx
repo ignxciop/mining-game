@@ -1,12 +1,25 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { SKILL_TREE, SkillNodeDef, getBranchColor, getMineralSprite } from '../data/SkillTreeData'
+import { getMineralById } from '../game/entities/MineralTypes'
+
+const STAT_LABELS: Record<string, string> = {
+  pickaxe_power: 'Daño', speed: 'Velocidad', luck: 'Suerte',
+  crit_chance: 'Prob. Crítico', crit_damage: 'Daño Crítico',
+  efficiency: 'Recursos extra', fortune: 'Duplicación',
+  mining_range: 'Rango de minería', explosion_radius: 'Radio explosivo',
+  time_bonus: 'Tiempo extra', cosmic_power: 'Poder Cósmico',
+  void_pact: 'Pacto Vacío', sun_pact: 'Pacto Solar',
+  seismic_hit: 'Golpe Sísmico', echo_swing: 'Golpe Eco',
+  auto_excavator: 'Auto-Excavador', golden_vein: 'Veta Dorada',
+  rare_event_rate: 'Eventos Raros',
+}
 
 
 const COLS = 7
-const ROWS = 7
+const ROWS = 6
 const CELL_W = 140
-const CELL_H = 110
+const CELL_H = 105
 
 function nodePos(col: number, row: number) {
     return {
@@ -37,6 +50,8 @@ export function SkillTreeView({ onBack }: Props) {
     const resources = useGameStore((s) => s.resources)
     const skills = useGameStore((s) => s.skills)
     const purchaseSkill = useGameStore((s) => s.purchaseSkill)
+    const excludedBranches = useGameStore((s) => s.excludedBranches)
+    const setExcludedBranch = useGameStore((s) => s.setExcludedBranch)
     const [selectedNode, setSelectedNode] = useState<SkillNodeDef | null>(null)
 
     const totalW = COLS * CELL_W + 40
@@ -46,8 +61,17 @@ export function SkillTreeView({ onBack }: Props) {
         return (skills[node.id] ?? 0) >= node.maxLevel
     }
 
+    function isExcluded(node: SkillNodeDef): boolean {
+        if (!node.excludes) return false
+        return node.excludes.some((eid) => {
+            const excluded = SKILL_TREE.find((s) => s.id === eid)
+            return excluded ? isUnlocked(excluded) : false
+        })
+    }
+
     function isAvailable(node: SkillNodeDef): boolean {
         if (isUnlocked(node)) return false
+        if (isExcluded(node)) return false
         return node.requires.every((reqId) => {
             const req = SKILL_TREE.find((n) => n.id === reqId)
             if (!req) return true
@@ -64,6 +88,11 @@ export function SkillTreeView({ onBack }: Props) {
         const costs: Record<string, number> = {}
         for (const c of node.costs) costs[c.resource] = c.amount
         purchaseSkill(node.id, costs, node.upgradesStat, node.upgradeValue)
+        if (node.excludes) {
+            for (const exId of node.excludes) {
+                if (!excludedBranches.includes(exId)) setExcludedBranch(exId)
+            }
+        }
         setSelectedNode(null)
     }
 
@@ -110,7 +139,8 @@ export function SkillTreeView({ onBack }: Props) {
                         const unlocked = isUnlocked(node)
                         const available = isAvailable(node)
                         const afford = canAfford(node)
-                        const state = unlocked ? 'unlocked' : (available ? (afford ? 'available' : 'nofunds') : 'locked')
+                        const excluded = isExcluded(node)
+                        const state = unlocked ? 'unlocked' : (available ? (afford ? 'available' : 'nofunds') : excluded ? 'excluded' : 'locked')
 
                         return (
                             <button key={node.id}
@@ -123,7 +153,9 @@ export function SkillTreeView({ onBack }: Props) {
                                             ? `bg-gradient-to-b ${getBranchColor(node.branch)} opacity-90 border-green-500/40 hover:scale-105 active:scale-95 cursor-pointer`
                                             : state === 'nofunds'
                                                 ? `bg-gradient-to-b ${getBranchColor(node.branch)} opacity-70 border-red-500/30 hover:scale-105 active:scale-95 cursor-pointer`
-                                                : 'bg-gray-800/60 border-gray-700/40 opacity-50 cursor-not-allowed'
+                                                : state === 'excluded'
+                                                    ? 'bg-gray-900/80 border-red-900/50 opacity-40 cursor-not-allowed'
+                                                    : 'bg-gray-800/60 border-gray-700/40 opacity-50 cursor-not-allowed'
                                     }
                                     border-2 shadow-lg`}
                             >
@@ -145,68 +177,113 @@ export function SkillTreeView({ onBack }: Props) {
                 </div>
             </div>
 
-            {/* Detail panel */}
+            {/* Detail modal */}
             {selectedNode && (
-                <div className="border-t border-amber-900/20 bg-gray-900/95 backdrop-blur-md p-4 safe-area-padding-bottom">
-                    <div className="max-w-md mx-auto flex flex-col gap-3">
-                        <div className="flex items-center gap-3">
-                            <span className="text-2xl">{selectedNode.icon}</span>
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                    onClick={() => setSelectedNode(null)}
+                >
+                    <div className="w-full max-w-sm mx-4 rounded-2xl bg-gradient-to-b from-gray-800/95 to-gray-900/95
+                        border border-amber-800/30 shadow-2xl shadow-black/60 p-5"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Close button */}
+                        <button onClick={() => setSelectedNode(null)}
+                            className="float-right text-gray-500 hover:text-gray-300 text-lg leading-none"
+                        >✕</button>
+
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-4">
+                            <span className="text-3xl">{selectedNode.icon}</span>
                             <div>
-                                <div className="font-bold text-sm text-white">{selectedNode.name}</div>
+                                <div className="font-bold text-base text-white">{selectedNode.name}</div>
                                 <div className="text-xs text-gray-400">{selectedNode.description}</div>
                             </div>
                         </div>
 
-                        {!isUnlocked(selectedNode) && (
-                            <>
-                                <div className="flex flex-wrap gap-2">
-                                    {selectedNode.costs.map((cost) => {
-                                        const have = resources[cost.resource] ?? 0
-                                        const enough = have >= cost.amount
-                                        return (
-                                            <div key={cost.resource}
-                                                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs
-                                                    ${enough ? 'bg-gray-800/80 text-gray-300' : 'bg-red-900/30 text-red-400'}`}
-                                            >
-                                                <img src={getMineralSprite(cost.resource)} alt="" className="w-4 h-4 object-contain" />
-                                                <span className="font-mono">{have}/{cost.amount}</span>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-
-                                {isAvailable(selectedNode) ? (
-                                    <button onClick={() => handlePurchase(selectedNode)}
-                                        disabled={!canAfford(selectedNode)}
-                                        className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-100 active:scale-[0.97]
-                                            ${canAfford(selectedNode)
-                                                ? 'bg-gradient-to-b from-green-600 to-green-800 text-white border border-green-500/40 shadow-lg shadow-green-900/30'
-                                                : 'bg-gray-800/50 text-gray-600 border border-gray-700/40 cursor-not-allowed'}`}
-                                    >
-                                        {canAfford(selectedNode) ? '✓ Desbloquear' : '🔒 Recursos insuficientes'}
-                                    </button>
-                                ) : (
-                                    <div className="text-center text-xs text-gray-500 py-2">
-                                        🔒 Requiere: {selectedNode.requires.map((r) => {
-                                            const n = SKILL_TREE.find((s) => s.id === r)
-                                            return n?.name ?? r
-                                        }).join(', ')}
-                                    </div>
-                                )}
-                            </>
+                        {/* Mineral unlock */}
+                        {selectedNode.unlocksMineral && (
+                          <div className="mb-3 px-3 py-2 rounded-xl bg-amber-900/20 border border-amber-800/30 flex items-center gap-2">
+                            <img src={getMineralSprite(selectedNode.unlocksMineral)} alt="" className="w-6 h-6 object-contain" />
+                            <span className="text-xs text-amber-300 font-semibold">Desbloquea: {getMineralById(selectedNode.unlocksMineral)?.name ?? selectedNode.unlocksMineral}</span>
+                          </div>
                         )}
 
-                        {isUnlocked(selectedNode) && (
-                            <div className="text-center text-xs text-green-500 py-1">
-                                ✓ Desbloqueado
+                        {/* Stat improvement */}
+                        <div className="mb-4 px-3 py-2 rounded-xl bg-gray-700/30 border border-gray-600/30 text-center">
+                            <span className="text-xs text-gray-400">Mejora: </span>
+                            <span className="text-sm font-bold text-amber-300">{STAT_LABELS[selectedNode.upgradesStat] ?? selectedNode.upgradesStat}</span>
+                            <span className="text-xs text-gray-500"> +{selectedNode.upgradeValue}</span>
+                            {selectedNode.maxLevel > 1 && (
+                                <span className="text-[10px] text-gray-500 ml-2">
+                                    ({(skills[selectedNode.id] ?? 0)}/{selectedNode.maxLevel})
+                                </span>
+                            )}
+                            {selectedNode.isTransformative && (
+                                <div className="mt-1.5 text-[10px] text-orange-400 font-bold">⚡ TRANSFORMATIVO</div>
+                            )}
+                        </div>
+
+                        {/* Costs */}
+                        {!isUnlocked(selectedNode) && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                {selectedNode.costs.map((cost) => {
+                                    const have = resources[cost.resource] ?? 0
+                                    const enough = have >= cost.amount
+                                    return (
+                                        <div key={cost.resource}
+                                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs
+                                                ${enough ? 'bg-gray-800/80 text-gray-300' : 'bg-red-900/30 text-red-400'}`}
+                                        >
+                                            <img src={getMineralSprite(cost.resource)} alt="" className="w-4 h-4 object-contain" />
+                                            <span className="font-mono">{have}/{cost.amount}</span>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         )}
 
-                        <button onClick={() => setSelectedNode(null)}
-                            className="text-xs text-gray-500 active:text-gray-300 py-1"
-                        >
-                            Cerrar
-                        </button>
+                        {/* Exclusive info */}
+                        {selectedNode.excludes && selectedNode.excludes.length > 0 && (
+                            <div className="mb-3 px-3 py-2 rounded-xl bg-orange-900/20 border border-orange-800/30 text-center">
+                                <span className="text-[10px] text-orange-400 font-bold">⚠ EXCLUYENTE: </span>
+                                <span className="text-[10px] text-orange-300">
+                                    {selectedNode.excludes.map((eid) => {
+                                        const n = SKILL_TREE.find((s) => s.id === eid)
+                                        return n?.name ?? eid
+                                    }).join(', ')} quedará bloqueada
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Action */}
+                        {!isUnlocked(selectedNode) ? (
+                            isAvailable(selectedNode) ? (
+                                <button onClick={() => handlePurchase(selectedNode)}
+                                    disabled={!canAfford(selectedNode)}
+                                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-100 active:scale-[0.97]
+                                        ${canAfford(selectedNode)
+                                            ? 'bg-gradient-to-b from-green-600 to-green-800 text-white border border-green-500/40 shadow-lg shadow-green-900/30'
+                                            : 'bg-gray-800/50 text-gray-600 border border-gray-700/40 cursor-not-allowed'}`}
+                                >
+                                    {canAfford(selectedNode) ? '✓ Desbloquear' : '🔒 Recursos insuficientes'}
+                                </button>
+                            ) : isExcluded(selectedNode) ? (
+                                <div className="text-center text-xs text-red-500 py-3 rounded-xl bg-red-900/20 border border-red-800/30">
+                                    🔒 Bloqueado por rama excluyente
+                                </div>
+                            ) : (
+                                <div className="text-center text-xs text-gray-500 py-3 rounded-xl bg-gray-800/40 border border-gray-700/30">
+                                    🔒 Requiere: {selectedNode.requires.map((r) => {
+                                        const n = SKILL_TREE.find((s) => s.id === r)
+                                        return n?.name ?? r
+                                    }).join(', ')}
+                                </div>
+                            )
+                        ) : (
+                            <div className="text-center text-xs text-green-400 py-3 rounded-xl bg-green-900/20 border border-green-800/30">
+                                ✓ Habilidad desbloqueada
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
