@@ -5,10 +5,11 @@ import { MobileHUD } from './components/MobileHUD'
 import { MainMenu } from './components/MainMenu'
 import { SessionSummary } from './components/SessionSummary'
 import { SkillTreeView } from './components/SkillTreeView'
+import { PrestigeView } from './components/PrestigeView'
 import { useGameStore, ResourceType } from './store/gameStore'
 import { EventBus } from './game/EventBus'
 
-type Screen = 'menu' | 'mining' | 'summary' | 'upgrades'
+type Screen = 'menu' | 'mining' | 'summary' | 'upgrades' | 'prestige'
 
 function App() {
     const phaserRef = useRef<IRefPhaserGame | null>(null)
@@ -37,11 +38,11 @@ function App() {
             const start = sessionStart.current
             if (!start) return
             const current = useGameStore.getState().resources
-            const calcGains: Record<ResourceType, number> = {
-                dirt: (current.dirt ?? 0) - (start.dirt ?? 0),
-                copper: (current.copper ?? 0) - (start.copper ?? 0),
-                iron: (current.iron ?? 0) - (start.iron ?? 0),
-                steel: (current.steel ?? 0) - (start.steel ?? 0),
+            const calcGains: Record<string, number> = {}
+            const allKeys = new Set([...Object.keys(start), ...Object.keys(current)])
+            for (const key of allKeys) {
+                const diff = (current[key as ResourceType] ?? 0) - (start[key as ResourceType] ?? 0)
+                if (diff > 0) calcGains[key] = diff
             }
             setGains(calcGains)
             setScreen('summary')
@@ -60,6 +61,10 @@ function App() {
 
     if (screen === 'upgrades') {
         return <SkillTreeView onBack={() => setScreen('menu')} />
+    }
+
+    if (screen === 'prestige') {
+        return <PrestigeView onBack={() => setScreen('menu')} />
     }
 
     return (

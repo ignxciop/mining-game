@@ -1,5 +1,5 @@
 interface Props {
-    onSelect: (screen: "mining" | "upgrades") => void;
+    onSelect: (screen: "mining" | "upgrades" | "prestige") => void;
 }
 
 export function MainMenu({ onSelect }: Props) {
@@ -56,6 +56,22 @@ export function MainMenu({ onSelect }: Props) {
                         <span className="relative z-10 flex items-center justify-center gap-3">
                             <span className="text-2xl drop-shadow">⚡</span>
                             <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Mejoras</span>
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={() => onSelect("prestige")}
+                        className="group relative w-full py-3 sm:py-4 rounded-2xl text-base sm:text-lg font-bold
+                            bg-gradient-to-b from-purple-600 to-purple-800
+                            active:from-purple-700 active:to-purple-900
+                            text-white transition-all duration-100 ease-out cursor-pointer
+                            active:scale-[0.97] shadow-[0_8px_32px_rgba(147,51,234,0.35)]
+                            active:shadow-[0_2px_16px_rgba(147,51,234,0.2)]
+                            border border-purple-400/40 active:border-purple-500/30"
+                    >
+                        <span className="relative z-10 flex items-center justify-center gap-3">
+                            <span className="text-xl drop-shadow">🌟</span>
+                            <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Prestige</span>
                         </span>
                     </button>
                 </div>

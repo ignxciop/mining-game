@@ -3,10 +3,10 @@ import { useGameStore } from '../store/gameStore'
 import { SKILL_TREE, SkillNodeDef, getBranchColor, getMineralSprite } from '../data/SkillTreeData'
 
 
-const COLS = 5
-const ROWS = 4
-const CELL_W = 160
-const CELL_H = 130
+const COLS = 7
+const ROWS = 7
+const CELL_W = 140
+const CELL_H = 110
 
 function nodePos(col: number, row: number) {
     return {
