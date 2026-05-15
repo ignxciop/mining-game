@@ -97,7 +97,7 @@ export function SkillTreeView({ onBack }: Props) {
     }
 
     return (
-        <div className="flex flex-col min-h-dvh bg-[#0a0a0f] text-white select-none safe-area-padding">
+        <div className="flex flex-col h-dvh bg-[#0a0a0f] text-white select-none safe-area-padding">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-amber-900/20">
                 <button onClick={onBack}
