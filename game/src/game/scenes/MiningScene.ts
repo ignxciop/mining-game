@@ -10,17 +10,23 @@ import {
 } from '../../store/gameStore'
 import { EventBus } from '../EventBus'
 
-const IS_MOBILE = typeof window !== 'undefined' && (window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent))
-const BASE_RANGE = IS_MOBILE ? 55 : 80
-const MINERAL_COUNT = IS_MOBILE ? 5 : 8
-const MINERAL_SIZE = IS_MOBILE ? 52 : 64
-const MIN_SPACING = IS_MOBILE ? Math.max(Math.round((typeof window !== 'undefined' ? window.innerWidth : 375) * 0.22), 80) : 90
+const BASE_RANGE = 80
+const MINERAL_COUNT = 8
+const MIN_SPACING = 90
 const COMBO_WINDOW = 1.5
 const RAGE_THRESHOLD = 10
 const MAX_PARTICLES = 20
 
+function getIsMobile(): boolean {
+  return typeof window !== 'undefined' && (window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent))
+}
+
+function getMineralSize(): number {
+  return getIsMobile() ? 52 : 64
+}
+
 function getAreaDimensions(w: number, h: number) {
-  if (IS_MOBILE) {
+  if (getIsMobile()) {
     const mw = Math.min(420, w * 0.92); const mh = Math.min(500, h * 0.62)
     return { w: Math.round(mw), h: Math.round(mh) }
   }
@@ -223,9 +229,10 @@ export class MiningScene extends Scene {
       mineral = getRandomMineralByWeight(luckLevel, prestigeLv, allowed)
     }
 
+    const mSize = getMineralSize()
     const block = new Block(mineral)
     const pos = this.findSpawnPosition()
-    const sprite = this.add.image(pos.x, pos.y, block.textureKey).setOrigin(0.5).setDisplaySize(MINERAL_SIZE, MINERAL_SIZE)
+    const sprite = this.add.image(pos.x, pos.y, block.textureKey).setOrigin(0.5).setDisplaySize(mSize, mSize)
     const node: MineralNode = { block, sprite, x: pos.x, y: pos.y, damageTimer: 0, isTargeted: false, activeEffects: [], isVein: false }
     this.nodes.push(node)
 
@@ -237,7 +244,7 @@ export class MiningScene extends Scene {
         const vx = pos.x + randInt(-40, 40); const vy = pos.y + randInt(-40, 40)
         if (vx < 50 || vx > this.scale.width - 50 || vy < 50 || vy > this.scale.height - 50) continue
         const vBlock = new Block(mineral)
-        const vSprite = this.add.image(vx, vy, vBlock.textureKey).setOrigin(0.5).setDisplaySize(MINERAL_SIZE - 8, MINERAL_SIZE - 8)
+        const vSprite = this.add.image(vx, vy, vBlock.textureKey).setOrigin(0.5).setDisplaySize(mSize - 8, mSize - 8)
         this.nodes.push({ block: vBlock, sprite: vSprite, x: vx, y: vy, damageTimer: 0, isTargeted: false, activeEffects: [], isVein: true })
       }
     }
