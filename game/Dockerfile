@@ -1,10 +1,9 @@
 # =============================================================================
 # Mining Game — Dockerfile
-# Multi-stage build: install deps → build → serve static with node
+# Multi-stage: build with node → serve with nginx
 # =============================================================================
 
-# ---- Stage 1: Install dependencies ----
-FROM node:22-alpine AS deps
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -14,34 +13,19 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 RUN pnpm install --frozen-lockfile
 
-# ---- Stage 2: Build the application ----
-FROM node:22-alpine AS builder
-
-WORKDIR /app
-
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN pnpm run build
 
-# ---- Stage 3: Production static server ----
-FROM node:22-alpine AS production
+FROM nginx:alpine
 
-RUN addgroup -S app && adduser -S app -G app
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-RUN npm install -g serve@14
-
-COPY --from=builder --chown=app:app /app/dist /app/dist
-
-WORKDIR /app
-
-USER app
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 4011
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:4011/ || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:4011 || exit 1
 
-CMD ["serve", "-s", "dist", "-l", "4011"]
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,32 +1,9 @@
 # =============================================================================
 # Mining Game — Docker Compose
-# Production-ready stack with nginx reverse proxy and Cloudflare Tunnel
+# Production-ready stack with Cloudflare Tunnel
 # =============================================================================
 
 services:
-  # ── Reverse Proxy ──────────────────────────────────────────────────────────
-  nginx:
-    image: nginx:1.27-alpine
-    container_name: mining-nginx
-    restart: unless-stopped
-    ports:
-      - "${NGINX_PORT:-4011}:80"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:80/health > /dev/null 2>&1"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      game:
-        condition: service_healthy
-      # backend:
-      #   condition: service_healthy
-    networks:
-      - mining-net
-
   # ── Frontend (Game) ────────────────────────────────────────────────────────
   game:
     build:
@@ -34,30 +11,26 @@ services:
       dockerfile: Dockerfile
     container_name: mining-game
     restart: unless-stopped
-    expose:
-      - "4011"
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4011/"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+    ports:
+      - "4011:4011"
     networks:
-      - mining-net
+      - mine-net
 
   # ── Cloudflare Tunnel ─────────────────────────────────────────────────────
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: mining-cloudflared
     restart: unless-stopped
-    command: tunnel run
     environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:?error}
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
     depends_on:
-      nginx:
-        condition: service_healthy
+      - game
     networks:
-      - mining-net
+      - mine-net
 
   # ── Backend API (Future) ───────────────────────────────────────────────────
   # backend:
@@ -70,18 +43,13 @@ services:
   #     - "${BACKEND_PORT:-4012}:4012"
   #   environment:
   #     - NODE_ENV=production
-  #     - DATABASE_URL=${DATABASE_URL:-postgresql://mining:mining@db:5432/mining}
+  #     - PORT=4012
+  #     - DATABASE_URL=${DATABASE_URL}
   #     - JWT_SECRET=${JWT_SECRET}
-  #   healthcheck:
-  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4012/api/health"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
   #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  #     - db
   #   networks:
-  #     - mining-net
+  #     - mine-net
 
   # ── PostgreSQL (Future) ────────────────────────────────────────────────────
   # db:
@@ -102,10 +70,10 @@ services:
   #     timeout: 5s
   #     retries: 5
   #   networks:
-  #     - mining-net
+  #     - mine-net
 
 networks:
-  mining-net:
+  mine-net:
     driver: bridge
 
 volumes:
