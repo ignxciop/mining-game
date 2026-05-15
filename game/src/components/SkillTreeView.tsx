@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { SKILL_TREE, SkillNodeDef, getBranchColor, getMineralSprite } from '../data/SkillTreeData'
-import { getMineralById } from '../game/entities/MineralTypes'
+import { getMineralById, MINERALS, MineralId } from '../game/entities/MineralTypes'
+
+const STARTING_MINERALS = new Set(['clay', 'shale'])
 
 const STAT_LABELS: Record<string, string> = {
   pickaxe_power: 'Daño', speed: 'Velocidad', luck: 'Suerte',
@@ -53,6 +55,7 @@ export function SkillTreeView({ onBack }: Props) {
     const excludedBranches = useGameStore((s) => s.excludedBranches)
     const setExcludedBranch = useGameStore((s) => s.setExcludedBranch)
     const [selectedNode, setSelectedNode] = useState<SkillNodeDef | null>(null)
+    const [toastMineral, setToastMineral] = useState<string | null>(null)
 
     const totalW = COLS * CELL_W + 40
     const totalH = ROWS * CELL_H + 40
@@ -69,14 +72,34 @@ export function SkillTreeView({ onBack }: Props) {
         })
     }
 
-    function isAvailable(node: SkillNodeDef): boolean {
-        if (isUnlocked(node)) return false
-        if (isExcluded(node)) return false
+    function areRequirementsMet(node: SkillNodeDef): boolean {
         return node.requires.every((reqId) => {
             const req = SKILL_TREE.find((n) => n.id === reqId)
             if (!req) return true
             return (skills[req.id] ?? 0) >= req.maxLevel
         })
+    }
+
+    function isMineralAccessible(mineralId: string): boolean {
+        if (STARTING_MINERALS.has(mineralId)) return true
+        const skillId = MINERALS.find((m) => m.id === mineralId)?.unlockSkill
+        if (!skillId) return true
+        const skillDef = SKILL_TREE.find((s) => s.id === skillId)
+        return (skills[skillId] ?? 0) >= (skillDef?.maxLevel ?? 1)
+    }
+
+    function areCostMineralsAccessible(node: SkillNodeDef): boolean {
+        return node.costs.every((c) => isMineralAccessible(c.resource))
+    }
+
+    function getInaccessibleCostMinerals(node: SkillNodeDef): string[] {
+        return node.costs.filter((c) => !isMineralAccessible(c.resource)).map((c) => c.resource)
+    }
+
+    function isAvailable(node: SkillNodeDef): boolean {
+        if (isUnlocked(node)) return false
+        if (isExcluded(node)) return false
+        return areRequirementsMet(node) && areCostMineralsAccessible(node)
     }
 
     function canAfford(node: SkillNodeDef): boolean {
@@ -140,7 +163,9 @@ export function SkillTreeView({ onBack }: Props) {
                         const available = isAvailable(node)
                         const afford = canAfford(node)
                         const excluded = isExcluded(node)
-                        const state = unlocked ? 'unlocked' : (available ? (afford ? 'available' : 'nofunds') : excluded ? 'excluded' : 'locked')
+                        const reqsMet = areRequirementsMet(node)
+                        const mineralsAccessible = areCostMineralsAccessible(node)
+                        const state = unlocked ? 'unlocked' : (available ? (afford ? 'available' : 'nofunds') : excluded ? 'excluded' : (reqsMet && !mineralsAccessible) ? 'locked_mineral' : 'locked')
 
                         return (
                             <button key={node.id}
@@ -155,7 +180,9 @@ export function SkillTreeView({ onBack }: Props) {
                                                 ? `bg-gradient-to-b ${getBranchColor(node.branch)} opacity-70 border-red-500/30 hover:scale-105 active:scale-95 cursor-pointer`
                                                 : state === 'excluded'
                                                     ? 'bg-gray-900/80 border-red-900/50 opacity-40 cursor-not-allowed'
-                                                    : 'bg-gray-800/60 border-gray-700/40 opacity-50 cursor-not-allowed'
+                                                    : state === 'locked_mineral'
+                                                        ? 'bg-gray-800/60 border-amber-900/50 opacity-50 cursor-not-allowed'
+                                                        : 'bg-gray-800/60 border-gray-700/40 opacity-50 cursor-not-allowed'
                                     }
                                     border-2 shadow-lg`}
                             >
@@ -229,16 +256,24 @@ export function SkillTreeView({ onBack }: Props) {
                                 {selectedNode.costs.map((cost) => {
                                     const have = resources[cost.resource] ?? 0
                                     const enough = have >= cost.amount
+                                    const minName = getMineralById(cost.resource as MineralId)?.name ?? cost.resource
                                     return (
                                         <div key={cost.resource}
-                                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs
+                                            onClick={() => { setToastMineral(minName); setTimeout(() => setToastMineral(null), 2000) }}
+                                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer active:scale-95 transition-transform
                                                 ${enough ? 'bg-gray-800/80 text-gray-300' : 'bg-red-900/30 text-red-400'}`}
+                                            title={minName}
                                         >
-                                            <img src={getMineralSprite(cost.resource)} alt="" className="w-4 h-4 object-contain" />
+                                            <img src={getMineralSprite(cost.resource)} alt={minName} className="w-4 h-4 object-contain" />
                                             <span className="font-mono">{have}/{cost.amount}</span>
                                         </div>
                                     )
                                 })}
+                            </div>
+                        )}
+                        {toastMineral && (
+                            <div className="mb-4 text-center text-xs text-amber-400 bg-amber-900/20 rounded-lg py-2 border border-amber-800/30 animate-pulse">
+                                {toastMineral}
                             </div>
                         )}
 
@@ -270,6 +305,10 @@ export function SkillTreeView({ onBack }: Props) {
                             ) : isExcluded(selectedNode) ? (
                                 <div className="text-center text-xs text-red-500 py-3 rounded-xl bg-red-900/20 border border-red-800/30">
                                     🔒 Bloqueado por rama excluyente
+                                </div>
+                            ) : areRequirementsMet(selectedNode) && !areCostMineralsAccessible(selectedNode) ? (
+                                <div className="text-center text-xs text-amber-500 py-3 rounded-xl bg-amber-900/20 border border-amber-800/30">
+                                    🔒 Mineral no disponible: {getInaccessibleCostMinerals(selectedNode).map((m) => getMineralById(m as MineralId)?.name ?? m).join(', ')}
                                 </div>
                             ) : (
                                 <div className="text-center text-xs text-gray-500 py-3 rounded-xl bg-gray-800/40 border border-gray-700/30">
