@@ -1,0 +1,11 @@
+# =============================================================================
+# Root .dockerignore — exclusions for docker build context
+# =============================================================================
+
+node_modules
+.git
+.gitignore
+.env
+.env.local
+*.md
+screenshot.png
