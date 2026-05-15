@@ -4,7 +4,7 @@ import { Sidebar } from './components/Sidebar'
 import { MobileHUD } from './components/MobileHUD'
 import { MainMenu } from './components/MainMenu'
 import { SessionSummary } from './components/SessionSummary'
-import { UpgradesView } from './components/UpgradesView'
+import { SkillTreeView } from './components/SkillTreeView'
 import { useGameStore, ResourceType } from './store/gameStore'
 import { EventBus } from './game/EventBus'
 
@@ -59,7 +59,7 @@ function App() {
     }
 
     if (screen === 'upgrades') {
-        return <UpgradesView onBack={() => setScreen('menu')} />
+        return <SkillTreeView onBack={() => setScreen('menu')} />
     }
 
     return (

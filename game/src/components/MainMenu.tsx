@@ -61,7 +61,7 @@ export function MainMenu({ onSelect }: Props) {
                 </div>
 
                 <div className="text-center text-amber-400/15 text-[10px] sm:text-xs tracking-widest uppercase">
-                    v0.1 &middot; En desarrollo
+                    v1.0
                 </div>
             </div>
         </div>

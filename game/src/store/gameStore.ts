@@ -62,7 +62,7 @@ export function getPickaxePower(level: number): number {
 }
 
 export function getSpeedInterval(level: number): number {
-    return 0.15 / (1 + level * 0.15)
+    return 1 / (1 + level * 0.15)
 }
 
 export const SESSION_DURATION = 20
@@ -76,10 +76,12 @@ export interface GameState {
     resources: Record<ResourceType, number>
     tool: Tool
     upgrades: Record<string, number>
+    skills: Record<string, number>
     stats: GameStats
 
     addResources: (resources: Partial<Record<ResourceType, number>>) => void
     buyUpgrade: (id: string) => void
+    purchaseSkill: (skillId: string, costResources: Record<string, number>, stat: string, statValue: number) => boolean
     reset: () => void
 }
 
@@ -96,6 +98,7 @@ export const useGameStore = create<GameState>()(
             resources: { ...INITIAL_RESOURCES },
             tool: { name: PICKAXE_NAMES[0], power: 1 },
             upgrades: {},
+            skills: {},
             stats: { blocksBroken: 0 },
 
             addResources: (resources) => {
@@ -142,20 +145,56 @@ export const useGameStore = create<GameState>()(
                 })
             },
 
+            purchaseSkill: (skillId: string, costResources: Record<string, number>, stat: string, statValue: number): boolean => {
+                let success = false
+                set((s) => {
+                    const currentSkillLevel = s.skills[skillId] ?? 0
+                    const currentStatLevel = s.upgrades[stat] ?? 0
+
+                    const affordable = Object.entries(costResources).every(
+                        ([res, amt]) => (s.resources[res as ResourceType] ?? 0) >= amt
+                    )
+                    if (!affordable) return s
+
+                    const newResources = { ...s.resources }
+                    for (const [res, amt] of Object.entries(costResources)) {
+                        newResources[res as ResourceType] = (newResources[res as ResourceType] ?? 0) - amt
+                    }
+
+                    const newSkills = { ...s.skills, [skillId]: currentSkillLevel + 1 }
+                    const newUpgrades = { ...s.upgrades, [stat]: currentStatLevel + statValue }
+                    const pickLevel = newUpgrades['pickaxe_power'] ?? 0
+
+                    success = true
+                    return {
+                        resources: newResources,
+                        skills: newSkills,
+                        upgrades: newUpgrades,
+                        tool: {
+                            name: PICKAXE_NAMES[Math.min(pickLevel, PICKAXE_NAMES.length - 1)],
+                            power: getPickaxePower(pickLevel),
+                        },
+                    }
+                })
+                return success
+            },
+
             reset: () => set({
                 resources: { ...INITIAL_RESOURCES },
                 tool: { name: PICKAXE_NAMES[0], power: 1 },
                 upgrades: {},
+                skills: {},
                 stats: { blocksBroken: 0 },
             }),
         }),
         {
             name: 'mining-game-save',
-            version: 2,
+            version: 3,
             migrate: () => ({
                 resources: { ...INITIAL_RESOURCES },
                 tool: { name: PICKAXE_NAMES[0], power: 1 },
                 upgrades: {},
+                skills: {},
                 stats: { blocksBroken: 0 },
             }),
         }

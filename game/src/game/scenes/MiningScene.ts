@@ -9,7 +9,7 @@ const MINERAL_COUNT = 8
 const MINERAL_SIZE = 64
 const MIN_SPACING = 90
 
-function getAreaDimensions(w: number, h: number): { w: number; h: number } {
+function getAreaDimensions(w: number, h: number) {
     const maxW = Math.min(520, w * 0.85)
     const maxH = Math.min(380, h * 0.55)
     const aspect = 520 / 380
@@ -30,40 +30,27 @@ interface MineralNode {
     y: number
     damageTimer: number
     isTargeted: boolean
-    damageAccum: number
 }
 
 function generateGrassTexture(scene: Scene, w: number, h: number): void {
     const key = 'bg_grass'
     if (scene.textures.exists(key)) return
-
     const gfx = scene.add.graphics()
-    gfx.fillStyle(0x4a7c3f, 1)
-    gfx.fillRect(0, 0, w, h)
+    gfx.fillStyle(0x4a7c3f, 1); gfx.fillRect(0, 0, w, h)
     for (let i = 0; i < 40; i++) {
-        const x = Math.random() * w
-        const y = Math.random() * h
-        const r = 3 + Math.random() * 8
         gfx.fillStyle(0x3d6b34, 0.3 + Math.random() * 0.2)
-        gfx.fillCircle(x, y, r)
+        gfx.fillCircle(Math.random() * w, Math.random() * h, 3 + Math.random() * 8)
     }
     for (let i = 0; i < 14; i++) {
-        const x = Math.random() * w
-        const y = Math.random() * h
         gfx.fillStyle(0x5a4a3a, 0.15 + Math.random() * 0.1)
-        gfx.fillEllipse(x, y, 10 + Math.random() * 20, 6 + Math.random() * 8)
+        gfx.fillEllipse(Math.random() * w, Math.random() * h, 10 + Math.random() * 20, 6 + Math.random() * 8)
     }
     for (let i = 0; i < 8; i++) {
-        const x = Math.random() * w
-        const y = Math.random() * h
-        const r = 2 + Math.random() * 4
-        gfx.fillStyle(0x6b5b4b, 0.2 + Math.random() * 0.15)
-        gfx.fillCircle(x, y, r)
-        gfx.fillStyle(0x8b7b6b, 0.15)
-        gfx.fillCircle(x - 1, y - 1, r * 0.7)
+        const x = Math.random() * w, y = Math.random() * h, r = 2 + Math.random() * 4
+        gfx.fillStyle(0x6b5b4b, 0.2 + Math.random() * 0.15); gfx.fillCircle(x, y, r)
+        gfx.fillStyle(0x8b7b6b, 0.15); gfx.fillCircle(x - 1, y - 1, r * 0.7)
     }
-    gfx.generateTexture(key, w, h)
-    gfx.destroy()
+    gfx.generateTexture(key, w, h); gfx.destroy()
 }
 
 export class MiningScene extends Scene {
@@ -80,69 +67,42 @@ export class MiningScene extends Scene {
     private timerText!: GameObjects.Text
     private ended = false
 
-    constructor() {
-        super('MiningScene')
-    }
+    constructor() { super('MiningScene') }
 
     preload(): void {
-        for (const m of MINERALS) {
-            for (const stage of m.stages) {
+        for (const m of MINERALS)
+            for (const stage of m.stages)
                 this.load.image(stage.textureKey, `assets/ores/${stage.textureKey}.png`)
-            }
-        }
     }
 
     create(): void {
         this.ended = false
         this.timeLeft = SESSION_DURATION
         this.nodes = []
-
         this.areaCX = this.scale.width / 2
         this.areaCY = this.scale.height / 2
-
         const dims = getAreaDimensions(this.scale.width, this.scale.height)
-        this.areaW = dims.w
-        this.areaH = dims.h
-
+        this.areaW = dims.w; this.areaH = dims.h
         generateGrassTexture(this, this.areaW, this.areaH)
 
         this.areaGfx = this.add.graphics()
         this.circleGfx = this.add.graphics()
-
         this.timerText = this.add.text(this.areaCX, this.areaCY - this.areaH / 2 - 50, '', {
-            fontSize: '32px',
-            fontStyle: 'bold',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4,
+            fontSize: '32px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 4,
         }).setOrigin(0.5)
 
         this.drawArea()
-
-        this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
-            if (!this.ended) {
-                this.mouseX = p.x
-                this.mouseY = p.y
-            }
-        })
-
+        this.input.on('pointermove', (p: Phaser.Input.Pointer) => { if (!this.ended) { this.mouseX = p.x; this.mouseY = p.y } })
         this.spawnAllNodes()
         this.updateTimerDisplay()
-
         EventBus.on('session-start', this.resetSession, this)
         EventBus.emit('current-scene-ready', this)
     }
 
     update(_time: number, delta: number): void {
         if (this.ended) return
-
         this.timeLeft -= delta / 1000
-        if (this.timeLeft <= 0) {
-            this.timeLeft = 0
-            this.endSession()
-            return
-        }
-
+        if (this.timeLeft <= 0) { this.timeLeft = 0; this.endSession(); return }
         this.updateNodes(delta)
         this.drawCircle()
         this.updateTimerDisplay()
@@ -153,40 +113,28 @@ export class MiningScene extends Scene {
         const color = this.timeLeft <= 5 ? '#ef4444' : this.timeLeft <= 10 ? '#f59e0b' : '#ffffff'
         this.timerText.setText(`${secs}s`)
         this.timerText.setColor(color)
-
-        if (this.timeLeft <= 5) {
-            this.timerText.setScale(1 + (Math.sin(this.timeLeft * 20) * 0.03))
-        } else {
-            this.timerText.setScale(1)
-        }
+        if (this.timeLeft <= 5) this.timerText.setScale(1 + Math.sin(this.timeLeft * 20) * 0.03)
+        else this.timerText.setScale(1)
     }
 
     private endSession(): void {
         this.ended = true
         this.circleGfx.clear()
-
         EventBus.emit('session-ended')
     }
 
     private resetSession(): void {
-        for (const node of this.nodes) {
-            node.sprite.destroy()
-        }
+        for (const n of this.nodes) n.sprite.destroy()
         this.nodes = []
         this.ended = false
         this.timeLeft = SESSION_DURATION
-        this.mouseX = 0
-        this.mouseY = 0
+        this.mouseX = 0; this.mouseY = 0
         this.spawnAllNodes()
         this.updateTimerDisplay()
     }
 
     private drawArea(): void {
-        const cx = this.areaCX
-        const cy = this.areaCY
-        const hw = this.areaW / 2
-        const hh = this.areaH / 2
-
+        const cx = this.areaCX, cy = this.areaCY, hw = this.areaW / 2, hh = this.areaH / 2
         this.areaGfx.clear()
         this.areaGfx.fillStyle(0x000000, 0.3)
         this.areaGfx.fillRoundedRect(cx - hw + 4, cy - hh + 4, this.areaW, this.areaH, 16)
@@ -198,9 +146,7 @@ export class MiningScene extends Scene {
         this.areaGfx.strokeRoundedRect(cx - hw + 3, cy - hh + 3, this.areaW - 6, this.areaH - 6, 14)
     }
 
-    private spawnAllNodes(): void {
-        for (let i = 0; i < MINERAL_COUNT; i++) this.spawnNode()
-    }
+    private spawnAllNodes(): void { for (let i = 0; i < MINERAL_COUNT; i++) this.spawnNode() }
 
     private spawnNode(): MineralNode {
         const store = useGameStore.getState()
@@ -208,32 +154,18 @@ export class MiningScene extends Scene {
         const mineral = getRandomMineralByWeight(luckLevel)
         const block = new Block(mineral)
         const pos = this.findSpawnPosition()
-        const sprite = this.add.image(pos.x, pos.y, block.textureKey)
-            .setOrigin(0.5)
-            .setDisplaySize(MINERAL_SIZE, MINERAL_SIZE)
-
-        const node: MineralNode = { block, sprite, x: pos.x, y: pos.y, damageTimer: 0, isTargeted: false, damageAccum: 0 }
+        const sprite = this.add.image(pos.x, pos.y, block.textureKey).setOrigin(0.5).setDisplaySize(MINERAL_SIZE, MINERAL_SIZE)
+        const node: MineralNode = { block, sprite, x: pos.x, y: pos.y, damageTimer: 0, isTargeted: false }
         this.nodes.push(node)
         return node
     }
 
     private findSpawnPosition(): { x: number; y: number } {
-        const pad = 50
-        const maxAttempts = 50
-        const hw = this.areaW / 2 - pad
-        const hh = this.areaH / 2 - pad
-        const cx = this.areaCX
-        const cy = this.areaCY
-
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            const x = cx - hw + Math.random() * hw * 2
-            const y = cy - hh + Math.random() * hh * 2
+        const pad = 50, maxAttempts = 50, hw = this.areaW / 2 - pad, hh = this.areaH / 2 - pad, cx = this.areaCX, cy = this.areaCY
+        for (let a = 0; a < maxAttempts; a++) {
+            const x = cx - hw + Math.random() * hw * 2, y = cy - hh + Math.random() * hh * 2
             let valid = true
-            for (const node of this.nodes) {
-                const dx = node.x - x
-                const dy = node.y - y
-                if (Math.sqrt(dx * dx + dy * dy) < MIN_SPACING) { valid = false; break }
-            }
+            for (const node of this.nodes) { if (Math.hypot(node.x - x, node.y - y) < MIN_SPACING) { valid = false; break } }
             if (valid) return { x, y }
         }
         return { x: cx + randInt(-hw, hw), y: cy + randInt(-hh, hh) }
@@ -241,35 +173,27 @@ export class MiningScene extends Scene {
 
     private updateNodes(delta: number): void {
         const store = useGameStore.getState()
-        const dps = store.tool.power
-        const speedLevel = store.upgrades['speed'] ?? 0
+        const baseDamage = Math.max(1, Math.round(store.tool.power))
+        const speedLevel = (store.upgrades['speed'] ?? 0) as number
         const interval = getSpeedInterval(speedLevel)
         const dt = delta / 1000
 
         for (const node of this.nodes) {
-            const dx = node.x - this.mouseX
-            const dy = node.y - this.mouseY
-            const dist = Math.sqrt(dx * dx + dy * dy)
-            const inRange = dist < MINING_RANGE
+            const inRange = Math.hypot(node.x - this.mouseX, node.y - this.mouseY) < MINING_RANGE
             node.isTargeted = inRange
 
             if (inRange) {
                 node.damageTimer += dt
-                node.damageAccum += dps * dt
-
                 while (node.damageTimer >= interval) {
                     node.damageTimer -= interval
                     const prevStage = node.block.stageIndex
-                    const dmg = Math.floor(node.damageAccum)
-                    if (dmg < 1) break
-                    node.damageAccum -= dmg
-                    node.block.takeDamage(dmg)
+                    node.block.takeDamage(baseDamage)
                     if (node.block.stageIndex !== prevStage) node.sprite.setTexture(node.block.textureKey)
                     this.showHitEffect(node)
-                    this.showDamageNumber(node.x, node.y - 30, dmg)
+                    this.showDamageNumber(node.x, node.y - 30, baseDamage)
                     if (node.block.isBroken()) {
                         const rewards = node.block.breakBlock()
-                        if (rewards) { const s = useGameStore.getState(); s.addResources(rewards) }
+                        if (rewards) useGameStore.getState().addResources(rewards)
                         this.showBreakEffect(node)
                         this.respawnNode(node)
                         break
@@ -277,7 +201,6 @@ export class MiningScene extends Scene {
                 }
             } else {
                 node.damageTimer = 0
-                node.damageAccum = 0
             }
         }
     }
@@ -300,9 +223,8 @@ export class MiningScene extends Scene {
         this.circleGfx.strokeCircle(this.mouseX, this.mouseY, MINING_RANGE)
         this.circleGfx.lineStyle(1, 0xaaddff, 0.1)
         this.circleGfx.strokeCircle(this.mouseX, this.mouseY, MINING_RANGE + 6)
-
         let targeted = 0
-        for (const node of this.nodes) { if (node.isTargeted) targeted++ }
+        for (const n of this.nodes) { if (n.isTargeted) targeted++ }
         if (targeted > 0) {
             this.circleGfx.lineStyle(1, 0xffdd88, 0.2)
             this.circleGfx.strokeCircle(this.mouseX, this.mouseY, MINING_RANGE + 3)
@@ -320,8 +242,7 @@ export class MiningScene extends Scene {
     }
 
     private showDamageNumber(x: number, y: number, amount: number): void {
-        const display = amount < 1 ? amount.toFixed(1) : Math.round(amount).toString()
-        const txt = this.add.text(x + randInt(-8, 8), y, `-${display}`, { fontSize: '13px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5)
+        const txt = this.add.text(x + randInt(-8, 8), y, `-${amount}`, { fontSize: '13px', color: '#ffffff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5)
         this.tweens.add({ targets: txt, y: y - 30, alpha: 0, duration: 500, ease: 'Quad.easeOut', onComplete: () => txt.destroy() })
     }
 
@@ -335,7 +256,7 @@ export class MiningScene extends Scene {
 
     shutdown(): void {
         EventBus.off('session-start', this.resetSession, this)
-        for (const node of this.nodes) node.sprite.destroy()
+        for (const n of this.nodes) n.sprite.destroy()
         this.nodes = []
     }
 }
