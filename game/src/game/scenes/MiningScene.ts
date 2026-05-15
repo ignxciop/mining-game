@@ -10,14 +10,20 @@ import {
 } from '../../store/gameStore'
 import { EventBus } from '../EventBus'
 
-const BASE_RANGE = 80
-const MINERAL_COUNT = 8
-const MINERAL_SIZE = 64
-const MIN_SPACING = 90
+const IS_MOBILE = typeof window !== 'undefined' && (window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent))
+const BASE_RANGE = IS_MOBILE ? 55 : 80
+const MINERAL_COUNT = IS_MOBILE ? 5 : 8
+const MINERAL_SIZE = IS_MOBILE ? 52 : 64
+const MIN_SPACING = IS_MOBILE ? Math.max(Math.round((typeof window !== 'undefined' ? window.innerWidth : 375) * 0.22), 80) : 90
 const COMBO_WINDOW = 1.5
 const RAGE_THRESHOLD = 10
+const MAX_PARTICLES = 20
 
 function getAreaDimensions(w: number, h: number) {
+  if (IS_MOBILE) {
+    const mw = Math.min(420, w * 0.92); const mh = Math.min(500, h * 0.62)
+    return { w: Math.round(mw), h: Math.round(mh) }
+  }
   const maxW = Math.min(520, w * 0.85); const maxH = Math.min(380, h * 0.55)
   const aspect = 520 / 380; let aw = maxW; let ah = maxW / aspect
   if (ah > maxH) { ah = maxH; aw = maxH * aspect }
@@ -62,6 +68,8 @@ export class MiningScene extends Scene {
   private comboIdleTimer = 0
   private rageActive = false
   private rageFlash!: GameObjects.Graphics
+  private particleCount = 0
+  private damageTextPool: GameObjects.Text[] = []
 
   constructor() { super('MiningScene') }
 
@@ -84,6 +92,8 @@ export class MiningScene extends Scene {
 
     this.areaGfx = this.add.graphics(); this.circleGfx = this.add.graphics()
     this.rageFlash = this.add.graphics().setAlpha(0).setDepth(100)
+    this.particleCount = 0
+    this.damageTextPool = []
     this.timerText = this.add.text(this.areaCX, this.areaCY - this.areaH / 2 - 50, '', {
       fontSize: '32px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 4,
     }).setOrigin(0.5)
@@ -165,6 +175,12 @@ export class MiningScene extends Scene {
     return range
   }
 
+  private getMaxTargets(): number {
+    if (!IS_MOBILE) return 999
+    const store = useGameStore.getState()
+    return 1 + (store.upgrades['multi_target'] ?? 0)
+  }
+
   private updateTimerDisplay(): void {
     const secs = Math.ceil(this.timeLeft)
     const color = this.timeLeft <= 5 ? '#ef4444' : this.timeLeft <= 10 ? '#f59e0b' : '#ffffff'
@@ -177,7 +193,7 @@ export class MiningScene extends Scene {
 
   private clearSession(): void {
     for (const n of this.nodes) n.sprite.destroy()
-    this.nodes = []; this.globalEffects = []; this.eventTimer = 0; this.autoTimer = 0; this.comboIdleTimer = 0; this.rageActive = false
+    this.nodes = []; this.globalEffects = []; this.eventTimer = 0; this.autoTimer = 0; this.comboIdleTimer = 0; this.rageActive = false; this.particleCount = 0
     this.ended = false
     const store = useGameStore.getState()
     store.resetCombo()
@@ -271,11 +287,16 @@ export class MiningScene extends Scene {
     if (this.rageActive) dmgMult *= 2
     const comboMult = 1 + combo * 0.05
 
+    const maxTargets = this.getMaxTargets()
+    let targetedCount = 0
+
     for (const node of this.nodes) {
       const inRange = Math.hypot(node.x - this.mouseX, node.y - this.mouseY) < range
-      node.isTargeted = inRange
+      const canTarget = inRange && targetedCount < maxTargets
+      node.isTargeted = canTarget
+      if (inRange && canTarget) targetedCount++
 
-      if (inRange) {
+      if (canTarget) {
         node.damageTimer += dt
         while (node.damageTimer >= interval) {
           node.damageTimer -= interval
@@ -415,29 +436,47 @@ export class MiningScene extends Scene {
     }
   }
 
+  private spawnParticle(x: number, y: number, color: number, isCrit: boolean): void {
+    if (this.particleCount >= MAX_PARTICLES) return
+    this.particleCount++
+    const size = isCrit ? randInt(3, 6) : randInt(2, 4)
+    const p = this.add.rectangle(x + randInt(-12, 12), y + randInt(-12, 12), size, size, color, 0.7)
+    this.tweens.add({
+      targets: p, x: p.x + randInt(-25, 25), y: p.y + randInt(15, 35),
+      alpha: 0, duration: isCrit ? 300 : 200,
+      onComplete: () => { p.destroy(); this.particleCount = Math.max(0, this.particleCount - 1) },
+    })
+  }
+
   private showHitEffect(node: MineralNode, isCrit: boolean): void {
     const dur = isCrit ? 60 : 40; const scaleM = isCrit ? 0.85 : 0.92
     this.tweens.add({ targets: node.sprite, scaleX: node.sprite.scaleX * scaleM, scaleY: node.sprite.scaleY * scaleM, duration: dur, yoyo: true })
-    const count = isCrit ? 6 : 2; const color = isCrit ? 0xff4444 : node.block.color
-    for (let i = 0; i < count; i++) {
-      const p = this.add.rectangle(node.x + randInt(-12, 12), node.y + randInt(-12, 12), randInt(2, 5), randInt(2, 5), color, 0.6)
-      this.tweens.add({ targets: p, x: p.x + randInt(-25, 25), y: p.y + randInt(15, 35), alpha: 0, duration: 250, onComplete: () => p.destroy() })
-    }
+    const count = isCrit ? 4 : 2; const color = isCrit ? 0xff4444 : node.block.color
+    for (let i = 0; i < count; i++) this.spawnParticle(node.x, node.y, color, isCrit)
   }
 
   private showDamageNumber(x: number, y: number, amount: number, isCrit: boolean): void {
     const color = isCrit ? '#ff4444' : '#ffffff'; const size = isCrit ? '18px' : '13px'; const prefix = isCrit ? '💥 ' : ''
-    const txt = this.add.text(x + randInt(-8, 8), y, `${prefix}${Math.round(amount)}`, { fontSize: size, color, fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5)
-    this.tweens.add({ targets: txt, y: y - (isCrit ? 50 : 30), alpha: 0, duration: isCrit ? 700 : 500, onComplete: () => txt.destroy() })
+
+    const recycled = this.damageTextPool.find((t) => t.alpha === 0)
+    const txt = recycled ?? this.add.text(0, 0, '', { fontSize: size, color, fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5)
+    if (!recycled) this.damageTextPool.push(txt)
+
+    txt.setPosition(x + randInt(-8, 8), y)
+    txt.setText(`${prefix}${Math.round(amount)}`)
+    txt.setFontSize(isCrit ? 18 : 13)
+    txt.setColor(color)
+    txt.setAlpha(1)
+
+    this.tweens.add({ targets: txt, y: y - (isCrit ? 50 : 30), alpha: 0, duration: isCrit ? 700 : 500 })
   }
 
   private showBreakEffect(node: MineralNode, isCrit: boolean): void {
-    const color = isCrit ? 0xffdd44 : node.block.color; const count = isCrit ? 20 : 10; const shake = isCrit ? 150 : 60; const intensity = isCrit ? 0.01 : 0.004
-    this.cameras.main.shake(shake, intensity)
-    for (let i = 0; i < count; i++) {
-      const p = this.add.rectangle(node.x + randInt(-15, 15), node.y + randInt(-15, 15), randInt(4, 12), randInt(4, 12), color)
-      this.tweens.add({ targets: p, x: node.x + randInt(-150, 150), y: node.y + randInt(-150, 150), alpha: 0, angle: randInt(-360, 360), duration: 350 + randInt(0, 200), onComplete: () => p.destroy() })
-    }
+    const color = isCrit ? 0xffdd44 : node.block.color
+    const count = isCrit ? 10 : 5
+    const shake = isCrit ? 150 : 60
+    this.cameras.main.shake(shake, isCrit ? 0.01 : 0.004)
+    for (let i = 0; i < count; i++) this.spawnParticle(node.x, node.y, color, isCrit)
   }
 
   shutdown(): void {
