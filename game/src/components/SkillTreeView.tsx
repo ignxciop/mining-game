@@ -46,9 +46,10 @@ function getLinePath(from: SkillNodeDef, to: SkillNodeDef): string | null {
 
 interface Props {
     onBack: () => void
+    onStartMining?: () => void
 }
 
-export function SkillTreeView({ onBack }: Props) {
+export function SkillTreeView({ onBack, onStartMining }: Props) {
     const resources = useGameStore((s) => s.resources)
     const skills = useGameStore((s) => s.skills)
     const purchaseSkill = useGameStore((s) => s.purchaseSkill)
@@ -131,7 +132,13 @@ export function SkillTreeView({ onBack }: Props) {
                     ← Volver
                 </button>
                 <h2 className="text-base sm:text-lg font-bold text-amber-300">Árbol de habilidades</h2>
-                <div className="w-16" />
+                <button onClick={onStartMining}
+                    className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold
+                        bg-gradient-to-b from-amber-600/80 to-amber-700/80 border border-amber-500/40
+                        text-amber-200 active:scale-[0.97] transition-transform duration-100"
+                >
+                    ⛏️ Minar
+                </button>
             </div>
 
             {/* Tree container */}

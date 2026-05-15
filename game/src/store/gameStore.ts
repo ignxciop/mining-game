@@ -15,7 +15,7 @@ export interface GameStats {
 }
 
 export function getPickaxePower(level: number): number {
-  return Math.floor(Math.pow(1.18, level) + level * 0.8)
+  return 1 + level
 }
 
 export function getSpeedInterval(level: number): number {
@@ -137,7 +137,7 @@ export const useGameStore = create<GameState>()(
 
           // Check if this skill unlocks a mineral
           const newUnlocked = [...s.unlockedMinerals]
-          const allMineralIds: MineralId[] = ['clay', 'shale', 'sulfur', 'copper', 'iron', 'coal_crystal', 'cinnabar', 'silver', 'obsidian', 'jade', 'malachite', 'lapis_lazuli', 'turquoise', 'rose_quartz', 'citrine', 'fluorite', 'rhodonite', 'amber', 'blue_topaz', 'emerald', 'sapphire', 'amethyst', 'aquamarine', 'sunstone', 'void', 'moonstone']
+          const allMineralIds: MineralId[] = ['clay', 'shale', 'sulfur', 'copper', 'iron', 'coal_crystal', 'cinnabar', 'silver', 'obsidian', 'jade', 'malachite', 'lapis_lazuli', 'turquoise', 'rose_quartz', 'citrine', 'fluorite', 'rhodonite', 'amber', 'blue_topaz', 'emerald', 'sapphire', 'amethyst', 'aquamarine', 'sunstone', 'void']
           for (const mid of allMineralIds) {
             const m = _getMineralById(mid)
             if (m && m.unlockSkill === skillId && !newUnlocked.includes(mid)) {

@@ -20,7 +20,7 @@ const MINERAL_SPRITES: Record<string, string> = {
   amber: '/assets/ores/amber1.png', blue_topaz: '/assets/ores/blue_topaz1.png',
   emerald: '/assets/ores/emerald1.png', sapphire: '/assets/ores/sapphire1.png',
   amethyst: '/assets/ores/amethyst1.png', aquamarine: '/assets/ores/aquamarine1.png',
-  sunstone: '/assets/ores/sunstone1.png', void: '/assets/ores/void1.png', moonstone: '/assets/ores/moonstone1.png',
+  sunstone: '/assets/ores/sunstone1.png', void: '/assets/ores/void1.png',
 }
 
 export function Sidebar({ onMenu }: Props) {

@@ -5,7 +5,7 @@ export type MineralId =
   | 'lapis_lazuli' | 'turquoise' | 'rose_quartz' | 'citrine'
   | 'fluorite' | 'rhodonite' | 'amber' | 'blue_topaz'
   | 'emerald' | 'sapphire' | 'amethyst' | 'aquamarine'
-  | 'sunstone' | 'void' | 'moonstone'
+  | 'sunstone' | 'void'
 
 export type MineralTier = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
@@ -91,7 +91,7 @@ export const MINERALS: MineralType[] = [
   // ═══ TIER 7 — Legendary branch ═══
   { id: 'sunstone', name: 'Piedra Solar', stages: [{ textureKey: 'sunstone1' }, { textureKey: 'sunstone2' }, { textureKey: 'sunstone3' }], color: 0xFF4500, hp: 40, baseWeight: 0.5, tier: 7, unlockSkill: 'solar_heart', effect: { type: 'sun_blessing', tickDamage: 2, duration: 8 } },
   { id: 'void', name: 'Vacío', stages: [{ textureKey: 'void1' }, { textureKey: 'void2' }, { textureKey: 'void3' }], color: 0x4B0082, hp: 50, baseWeight: 0.3, tier: 7, unlockSkill: 'void_portal', effect: { type: 'void_aura', bonusDamage: 1 } },
-  { id: 'moonstone', name: 'Piedra Lunar', stages: [{ textureKey: 'moonstone1' }, { textureKey: 'moonstone2' }, { textureKey: 'moonstone3' }], color: 0xFFFFF0, hp: 45, baseWeight: 0.4, tier: 7, unlockSkill: 'lunar_eclipse', effect: { type: 'moon_freeze', seconds: 5 } },
+
 ]
 
 export function getRandomMineralByWeight(luckLevel = 0, prestigeLevel = 0, allowedIds?: MineralId[]): MineralType {
@@ -126,7 +126,7 @@ export function getRandomMineralByWeight(luckLevel = 0, prestigeLevel = 0, allow
 
 export function getStageIndex(hpPct: number): number {
   if (hpPct >= 0.75) return 0
-  if (hpPct >= 0.25) return 1
+  if (hpPct >= 0.50) return 1
   return 2
 }
 

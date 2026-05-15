@@ -60,7 +60,7 @@ function App() {
     }
 
     if (screen === 'upgrades') {
-        return <SkillTreeView onBack={() => setScreen('menu')} />
+        return <SkillTreeView onBack={() => setScreen('menu')} onStartMining={startSession} />
     }
 
     if (screen === 'prestige') {

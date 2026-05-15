@@ -59,7 +59,7 @@ export const SKILL_TREE: SkillNodeDef[] = [
   { id: 'titan_strike', name: 'Golpe del Titán', description: '+12 daño base', icon: '🗿', maxLevel: 1, costs: [{ resource: 'jade', amount: 8 }, { resource: 'obsidian', amount: 12 }], requires: ['giant_strike'], position: { col: 3, row: 3 }, branch: 'damage', upgradesStat: 'pickaxe_power', upgradeValue: 12 },
   { id: 'crit_chance_base', name: 'Ojo Crítico', description: '+10% prob. crítico', icon: '🎯', maxLevel: 1, costs: [{ resource: 'silver', amount: 10 }, { resource: 'iron', amount: 15 }], requires: ['strong_swing'], position: { col: 3, row: 4 }, branch: 'damage', upgradesStat: 'crit_chance', upgradeValue: 10, excludes: ['quick_hands'] },
   { id: 'crit_damage_up', name: 'Potencia Crítica', description: '+0.5 daño crítico por nivel', icon: '💢', maxLevel: 5, costs: [{ resource: 'blue_topaz', amount: 2 }, { resource: 'iron', amount: 10 }], requires: ['crit_chance_base'], position: { col: 3, row: 5 }, branch: 'damage', upgradesStat: 'crit_damage', upgradeValue: 1 },
-  { id: 'cosmic_miner', name: 'Minero Cósmico', description: 'Todos los efectos ×2', icon: '🌟', maxLevel: 1, costs: [{ resource: 'moonstone', amount: 5 }, { resource: 'sunstone', amount: 5 }], requires: ['lunar_eclipse', 'eternal_pick'], position: { col: 3, row: 6 }, branch: 'legendary', upgradesStat: 'cosmic_power', upgradeValue: 1, isTransformative: true },
+  { id: 'cosmic_miner', name: 'Minero Cósmico', description: 'Todos los efectos ×2', icon: '🌟', maxLevel: 1, costs: [{ resource: 'sunstone', amount: 8 }, { resource: 'void', amount: 3 }], requires: ['eternal_pick'], position: { col: 3, row: 6 }, branch: 'legendary', upgradesStat: 'cosmic_power', upgradeValue: 1, isTransformative: true },
 
   // ═══ SPEED (col 4 rows 1-3) + VOID TOUCHED (col 4 row 4) + VOID EMPOWER (col 4 row 5) ═══
   { id: 'quick_hands', name: 'Manos Rápidas', description: '+2 speed', icon: '⚡', maxLevel: 1, costs: [{ resource: 'copper', amount: 10 }, { resource: 'shale', amount: 20 }], requires: ['copper_tools'], position: { col: 4, row: 1 }, branch: 'speed', upgradesStat: 'speed', upgradeValue: 2, excludes: ['crit_chance_base'] },
@@ -91,14 +91,13 @@ export const SKILL_TREE: SkillNodeDef[] = [
   { id: 'arcane_ritual', name: 'Ritual Arcano', description: 'Desbloquea Amatista', icon: '🔮', maxLevel: 1, costs: [{ resource: 'sapphire', amount: 3 }, { resource: 'amethyst', amount: 1 }], requires: ['crystalized_time'], position: { col: 7, row: 4 }, branch: 'prestige', upgradesStat: 'luck', upgradeValue: 2, unlocksMineral: 'amethyst' },
   { id: 'solar_heart', name: 'Corazón Solar', description: 'Desbloquea Piedra Solar', icon: '☀️', maxLevel: 1, costs: [{ resource: 'emerald', amount: 5 }, { resource: 'aquamarine', amount: 5 }], requires: ['arcane_ritual'], position: { col: 7, row: 5 }, branch: 'legendary', upgradesStat: 'pickaxe_power', upgradeValue: 5, unlocksMineral: 'sunstone' },
   { id: 'void_portal', name: 'Portal del Vacío', description: 'Desbloquea Vacío', icon: '🕳️', maxLevel: 1, costs: [{ resource: 'sunstone', amount: 3 }, { resource: 'sapphire', amount: 5 }], requires: ['solar_heart'], position: { col: 7, row: 6 }, branch: 'legendary', upgradesStat: 'pickaxe_power', upgradeValue: 5, unlocksMineral: 'void' },
-  { id: 'lunar_eclipse', name: 'Eclipse Lunar', description: 'Desbloquea Piedra Lunar', icon: '🌙', maxLevel: 1, costs: [{ resource: 'void', amount: 3 }, { resource: 'sunstone', amount: 3 }], requires: ['void_portal'], position: { col: 7, row: 7 }, branch: 'legendary', upgradesStat: 'time_bonus', upgradeValue: 3, unlocksMineral: 'moonstone' },
 
   // ═══ TIME BONUSES (5 skills across progression) ═══
   { id: 'time_boost_1', name: 'Más Tiempo I', description: '+5s de sesión — temprano', icon: '⏱️', maxLevel: 1, costs: [{ resource: 'iron', amount: 5 }, { resource: 'copper', amount: 8 }], requires: ['coal_crystals_node'], position: { col: 0, row: 5 }, branch: 'basic', upgradesStat: 'time_bonus', upgradeValue: 5 },
   { id: 'time_boost_2', name: 'Más Tiempo II', description: '+5s de sesión — más tiempo para brillar', icon: '⏱️', maxLevel: 1, costs: [{ resource: 'jade', amount: 5 }, { resource: 'silver', amount: 8 }], requires: ['natural_energy'], position: { col: 1, row: 5 }, branch: 'gems', upgradesStat: 'time_bonus', upgradeValue: 5 },
   { id: 'time_boost_3', name: 'Más Tiempo III', description: '+5s de sesión — el tiempo es oro', icon: '⏱️', maxLevel: 1, costs: [{ resource: 'rose_quartz', amount: 5 }, { resource: 'lapis_lazuli', amount: 5 }], requires: ['turquoise_core'], position: { col: 2, row: 5 }, branch: 'crystals', upgradesStat: 'time_bonus', upgradeValue: 5 },
   { id: 'time_boost_4', name: 'Más Tiempo IV', description: '+5s de sesión — maestro del tiempo', icon: '⏱️', maxLevel: 1, costs: [{ resource: 'blue_topaz', amount: 3 }, { resource: 'amber', amount: 3 }], requires: ['miner_eye'], position: { col: 5, row: 7 }, branch: 'rares', upgradesStat: 'time_bonus', upgradeValue: 5 },
-  { id: 'time_boost_5', name: 'Más Tiempo V', description: '+5s de sesión — distorsión temporal', icon: '⏱️', maxLevel: 1, costs: [{ resource: 'void', amount: 3 }, { resource: 'moonstone', amount: 2 }], requires: ['void_portal'], position: { col: 6, row: 7 }, branch: 'legendary', upgradesStat: 'time_bonus', upgradeValue: 5 },
+  { id: 'time_boost_5', name: 'Más Tiempo V', description: '+5s de sesión — distorsión temporal', icon: '⏱️', maxLevel: 1, costs: [{ resource: 'void', amount: 5 }], requires: ['void_portal'], position: { col: 6, row: 7 }, branch: 'legendary', upgradesStat: 'time_bonus', upgradeValue: 5 },
 ]
 
 export function getSkillById(id: string): SkillNodeDef | undefined {
@@ -116,7 +115,7 @@ const SPRITE_MAP: Record<string, string> = {
   amber: '/assets/ores/amber1.png', blue_topaz: '/assets/ores/blue_topaz1.png',
   emerald: '/assets/ores/emerald1.png', sapphire: '/assets/ores/sapphire1.png',
   amethyst: '/assets/ores/amethyst1.png', aquamarine: '/assets/ores/aquamarine1.png',
-  sunstone: '/assets/ores/sunstone1.png', void: '/assets/ores/void1.png', moonstone: '/assets/ores/moonstone1.png',
+  sunstone: '/assets/ores/sunstone1.png', void: '/assets/ores/void1.png',
 }
 
 export function getMineralSprite(resource: string): string {

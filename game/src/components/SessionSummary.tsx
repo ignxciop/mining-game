@@ -11,7 +11,7 @@ const MINERAL_LABELS: Record<string, string> = {
   amber: 'Ámbar', blue_topaz: 'Topacio Azul',
   emerald: 'Esmeralda', sapphire: 'Zafiro',
   amethyst: 'Amatista', aquamarine: 'Aguamarina',
-  sunstone: 'Piedra Solar', void: 'Vacío', moonstone: 'Piedra Lunar',
+  sunstone: 'Piedra Solar', void: 'Vacío',
 }
 
 const MINERAL_IMAGES: Record<string, string> = {
@@ -25,7 +25,7 @@ const MINERAL_IMAGES: Record<string, string> = {
   amber: '/assets/ores/amber1.png', blue_topaz: '/assets/ores/blue_topaz1.png',
   emerald: '/assets/ores/emerald1.png', sapphire: '/assets/ores/sapphire1.png',
   amethyst: '/assets/ores/amethyst1.png', aquamarine: '/assets/ores/aquamarine1.png',
-  sunstone: '/assets/ores/sunstone1.png', void: '/assets/ores/void1.png', moonstone: '/assets/ores/moonstone1.png',
+  sunstone: '/assets/ores/sunstone1.png', void: '/assets/ores/void1.png',
 }
 
 interface Props {

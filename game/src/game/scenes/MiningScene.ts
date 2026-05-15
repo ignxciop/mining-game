@@ -272,14 +272,11 @@ export class MiningScene extends Scene {
     const cosmic = store.upgrades['cosmic_power'] ?? 0
     const voidPact = store.upgrades['void_pact'] ?? 0
     const sunPact = store.upgrades['sun_pact'] ?? 0
-    const combo = store.combo ?? 0
     const cosmicMult = 1 + cosmic * 1.0
 
     let dmgMult = 1
     if (voidPact > 0) dmgMult += 0.5
     if (sunPact > 0) dmgMult -= 0.2
-    if (this.rageActive) dmgMult *= 2
-    const comboMult = 1 + combo * 0.05
 
     for (const node of this.nodes) {
       const inRange = Math.hypot(node.x - this.mouseX, node.y - this.mouseY) < range
@@ -292,7 +289,7 @@ export class MiningScene extends Scene {
           let dmg = baseDamage
           const prevStage = node.block.stageIndex
 
-          dmg = Math.round(dmg * dmgMult * cosmicMult * comboMult)
+          dmg = Math.round(dmg * dmgMult * cosmicMult)
 
           const frenzyActive = this.globalEffects.some((e) => e.type === 'frenzy')
           if (frenzyActive) dmg = Math.round(dmg * 2)
