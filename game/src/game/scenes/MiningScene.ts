@@ -175,12 +175,6 @@ export class MiningScene extends Scene {
     return range
   }
 
-  private getMaxTargets(): number {
-    if (!IS_MOBILE) return 999
-    const store = useGameStore.getState()
-    return 1 + (store.upgrades['multi_target'] ?? 0)
-  }
-
   private updateTimerDisplay(): void {
     const secs = Math.ceil(this.timeLeft)
     const color = this.timeLeft <= 5 ? '#ef4444' : this.timeLeft <= 10 ? '#f59e0b' : '#ffffff'
@@ -287,16 +281,11 @@ export class MiningScene extends Scene {
     if (this.rageActive) dmgMult *= 2
     const comboMult = 1 + combo * 0.05
 
-    const maxTargets = this.getMaxTargets()
-    let targetedCount = 0
-
     for (const node of this.nodes) {
       const inRange = Math.hypot(node.x - this.mouseX, node.y - this.mouseY) < range
-      const canTarget = inRange && targetedCount < maxTargets
-      node.isTargeted = canTarget
-      if (inRange && canTarget) targetedCount++
+      node.isTargeted = inRange
 
-      if (canTarget) {
+      if (inRange) {
         node.damageTimer += dt
         while (node.damageTimer >= interval) {
           node.damageTimer -= interval
