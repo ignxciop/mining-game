@@ -1,6 +1,6 @@
 # =============================================================================
 # Mining Game — Dockerfile
-# Multi-stage build: development deps → production build → nginx serve
+# Multi-stage build: install deps → build → serve static with node
 # =============================================================================
 
 # ---- Stage 1: Install dependencies ----
@@ -26,20 +26,22 @@ COPY . .
 
 RUN pnpm run build
 
-# ---- Stage 3: Production nginx ----
-FROM nginx:1.27-alpine AS production
+# ---- Stage 3: Production static server ----
+FROM node:22-alpine AS production
 
-RUN apk add --no-cache tzdata ca-certificates && \
-    rm -rf /var/cache/apk/*
+RUN addgroup -S app && adduser -S app -G app
 
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN npm install -g serve@14
 
-EXPOSE 80
+COPY --from=builder --chown=app:app /app/dist /app/dist
+
+WORKDIR /app
+
+USER app
+
+EXPOSE 4011
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:4011/ || exit 1
 
-USER nginx
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["serve", "-s", "dist", "-l", "4011"]

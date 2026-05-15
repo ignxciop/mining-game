@@ -29,7 +29,7 @@ services:
     container_name: mining-game
     restart: unless-stopped
     expose:
-      - "80"
+      - "4011"
     networks:
       - mining-net
 
