@@ -1,4 +1,5 @@
 import { Block } from '../entities/Block'
+import { getRandomMineralByWeight } from '../entities/MineralTypes'
 
 export interface MineResult {
     damage: number
@@ -8,15 +9,9 @@ export interface MineResult {
 
 export class MiningSystem {
     currentBlock: Block
-    private _blockTier: number
 
-    constructor(startTier = 0) {
-        this._blockTier = startTier
-        this.currentBlock = new Block(this._blockTier)
-    }
-
-    get blockTier(): number {
-        return this._blockTier
+    constructor() {
+        this.currentBlock = new Block(getRandomMineralByWeight())
     }
 
     mine(damage: number): MineResult {
@@ -24,8 +19,7 @@ export class MiningSystem {
 
         if (this.currentBlock.isBroken()) {
             const rewards = this.currentBlock.breakBlock()
-            this._blockTier++
-            this.currentBlock = new Block(this._blockTier)
+            this.currentBlock = new Block(getRandomMineralByWeight())
             return { damage, rewards, broken: true }
         }
 
@@ -33,7 +27,6 @@ export class MiningSystem {
     }
 
     reset(): void {
-        this._blockTier = 0
-        this.currentBlock = new Block(this._blockTier)
+        this.currentBlock = new Block(getRandomMineralByWeight())
     }
 }

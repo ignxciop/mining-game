@@ -1,19 +1,15 @@
-import { Boot } from './scenes/Boot'
-import { Preloader } from './scenes/Preloader'
+import { AUTO, Game, Scale } from 'phaser'
 import { MiningScene } from './scenes/MiningScene'
-import { AUTO, Game } from 'phaser'
 
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
-    width: 1024,
-    height: 768,
     parent: 'game-container',
-    backgroundColor: '#0a0a0f',
-    scene: [
-        Boot,
-        Preloader,
-        MiningScene,
-    ],
+    backgroundColor: '#3d6b34',
+    scale: {
+        mode: Scale.RESIZE,
+        autoCenter: Scale.CENTER_BOTH,
+    },
+    scene: [MiningScene],
 }
 
 const StartGame = (parent: string) => {
