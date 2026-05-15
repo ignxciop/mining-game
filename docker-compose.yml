@@ -33,6 +33,20 @@ services:
     networks:
       - mining-net
 
+  # ── Cloudflare Tunnel ─────────────────────────────────────────────────────
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: mining-cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:?error}
+    depends_on:
+      nginx:
+        condition: service_started
+    networks:
+      - mining-net
+
   # ── Backend API (Future) ───────────────────────────────────────────────────
   # backend:
   #   build:
