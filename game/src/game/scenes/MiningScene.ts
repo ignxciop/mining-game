@@ -382,10 +382,7 @@ export class MiningScene extends Scene {
         this.cameras.main.shake(100, 0.005); break
       }
       case 'speed_boost': this.globalEffects.push({ type: 'speed_boost', remaining: effect.duration, value: effect.multiplier }); break
-      case 'time_bonus': this.timeLeft += effect.seconds; break
       case 'tidal_wave': for (const other of this.nodes) { if (other === node) continue; other.block.takeDamage(Math.round(effect.damage * cosmicMult)); this.showHitEffect(other, false) }; this.cameras.main.shake(150, 0.008); break
-      case 'sun_blessing': this.globalEffects.push({ type: 'sun_blessing', remaining: effect.duration, value: effect.tickDamage }); break
-      case 'moon_freeze': this.timeLeft += effect.seconds; this.showLargeText('🌙 Tiempo congelado!'); break
       case 'chain': {
         const bonus = store.upgrades['jade_chain_bonus'] ?? 0
         if (Math.random() < effect.chance + bonus / 100) {
