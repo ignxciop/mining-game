@@ -9,6 +9,20 @@ function formatNumber(n: number): string {
 
 interface Props { onMenu: () => void }
 
+const MINERAL_SPRITES: Record<string, string> = {
+  clay: '/assets/ores/clay1.png', shale: '/assets/ores/shale1.png', sulfur: '/assets/ores/sulfur1.png',
+  copper: '/assets/ores/copper1.png', iron: '/assets/ores/iron1.png', silver: '/assets/ores/silver1.png',
+  coal_crystal: '/assets/ores/coal_crystal1.png', cinnabar: '/assets/ores/cinnabar1.png',
+  obsidian: '/assets/ores/obsidian1.png', jade: '/assets/ores/jade1.png', malachite: '/assets/ores/malachite1.png',
+  lapis_lazuli: '/assets/ores/lapis_lazuli1.png', turquoise: '/assets/ores/turquoise1.png',
+  rose_quartz: '/assets/ores/rose_quartz1.png', citrine: '/assets/ores/citrine1.png',
+  fluorite: '/assets/ores/fluorite1.png', rhodonite: '/assets/ores/rhodonite1.png',
+  amber: '/assets/ores/amber1.png', blue_topaz: '/assets/ores/blue_topaz1.png',
+  emerald: '/assets/ores/emerald1.png', sapphire: '/assets/ores/sapphire1.png',
+  amethyst: '/assets/ores/amethyst1.png', aquamarine: '/assets/ores/aquamarine1.png',
+  sunstone: '/assets/ores/sunstone1.png', void: '/assets/ores/void1.png',
+}
+
 export function MobileHUD({ onMenu }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
   const resources = useGameStore((s) => s.resources)
@@ -29,6 +43,7 @@ export function MobileHUD({ onMenu }: Props) {
             className="flex items-center gap-1 px-1.5 py-1 rounded-lg pointer-events-auto
               bg-black/60 backdrop-blur-sm border border-white/10 shadow-lg"
           >
+            <img src={MINERAL_SPRITES[key] ?? '/assets/ores/clay1.png'} alt="" className="w-4 h-4 object-contain" />
             <span className="text-[10px] font-mono truncate max-w-12">{key}</span>
             <span className="text-[11px] font-mono font-bold text-white">{formatNumber(amount)}</span>
           </div>
