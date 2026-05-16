@@ -196,6 +196,9 @@ export function SkillTreeView({ onBack, onStartMining }: Props) {
                                 <span className={`text-lg ${state === 'unlocked' ? 'drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]' : ''}`}>
                                     {node.icon}
                                 </span>
+                                {state === 'available' && (
+                                    <span className="absolute -top-1.5 -right-1.5 text-sm animate-pulse text-green-400 drop-shadow-[0_0_6px_rgba(74,222,128,0.8)]">❗</span>
+                                )}
                                 <span className={`text-[9px] font-bold text-center leading-tight px-1
                                     ${state === 'unlocked' ? 'text-green-300' : state === 'available' || state === 'nofunds' ? 'text-gray-200' : 'text-gray-500'}`}>
                                     {node.name}

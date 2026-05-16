@@ -48,13 +48,13 @@ export function SessionSummary({ gains, onMineAgain, onUpgrades, onMenu }: Props
 
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 backdrop-blur-sm safe-area-padding">
-      <div className="w-full max-w-sm sm:max-w-md mx-4 rounded-3xl bg-gradient-to-b from-gray-800/95 to-gray-900/95 border border-amber-800/30 shadow-2xl shadow-black/60 p-5 sm:p-8">
+      <div className="w-full max-w-sm sm:max-w-md mx-4 rounded-3xl bg-gradient-to-b from-gray-800/95 to-gray-900/95 border border-amber-800/30 shadow-2xl shadow-black/60 p-5 sm:p-8 max-h-[85dvh] overflow-y-auto">
         <div className="text-center mb-4 sm:mb-6">
           <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">⛏️</div>
           <h2 className="text-lg sm:text-xl font-bold text-amber-300">Resumen de la sesión</h2>
         </div>
 
-        <div className="flex flex-col gap-1.5 sm:gap-2 mb-6 sm:mb-8 max-h-48 overflow-y-auto">
+        <div className="flex flex-col gap-1.5 sm:gap-2 mb-6 sm:mb-8">
           {entries.map(([key, amount]) => (
             <div key={key}
               className="flex items-center gap-3 px-4 py-2.5 rounded-xl
