@@ -69,7 +69,6 @@ export class MiningScene extends Scene {
   private ended = false
   private globalEffects: ActiveEffect[] = []
   private timeBonus = 0
-  private eventTimer = 0
   private autoTimer = 0
   private comboIdleTimer = 0
   private rageActive = false
@@ -87,7 +86,7 @@ export class MiningScene extends Scene {
   }
 
   create(): void {
-    this.ended = false; this.timeLeft = SESSION_DURATION; this.nodes = []; this.rageActive = false; this.comboIdleTimer = 0; this.eventTimer = 0; this.autoTimer = 0; this.globalEffects = []
+    this.ended = false; this.timeLeft = SESSION_DURATION; this.nodes = []; this.rageActive = false; this.comboIdleTimer = 0; this.autoTimer = 0; this.globalEffects = []
     this.areaCX = this.scale.width / 2; this.areaCY = this.scale.height / 2
     const dims = getAreaDimensions(this.scale.width, this.scale.height)
     this.areaW = dims.w; this.areaH = dims.h
@@ -127,8 +126,6 @@ export class MiningScene extends Scene {
       if (store.combo > 0) { store.resetCombo(); this.rageActive = false }
     }
     this.updateGlobalEffects(delta)
-    this.eventTimer += delta / 1000
-    if (this.eventTimer > 10) { this.eventTimer = 0; this.trySpawnEvent() }
     this.updateNodes(delta)
     this.updateAutoExcavator(delta)
     this.drawCircle()
@@ -152,23 +149,6 @@ export class MiningScene extends Scene {
       this.autoTimer = 0
       const alive = this.nodes.filter((n) => !n.block.isBroken())
       if (alive.length > 0) { const t = alive[randInt(0, alive.length - 1)]; t.block.takeDamage(3); this.showHitEffect(t, false) }
-    }
-  }
-
-  private trySpawnEvent(): void {
-    const store = useGameStore.getState()
-    const rate = (store.upgrades['rare_event_rate'] ?? 0) > 0 ? 0.2 : 0.05
-    if (Math.random() > rate) return
-    const events = ['golden_vein', 'meteor', 'time_fracture']
-    const chosen = events[randInt(0, events.length - 1)]
-    if (chosen === 'golden_vein') {
-      this.showLargeText('🌟 Veta Dorada!')
-      const store = useGameStore.getState(); store.addResources({ emerald: 2, sapphire: 1 })
-    } else if (chosen === 'meteor') {
-      this.showLargeText('☄️ Meteorito!'); this.cameras.main.shake(200, 0.012)
-      for (const node of this.nodes) { node.block.takeDamage(10); this.showHitEffect(node, false) }
-    } else if (chosen === 'time_fracture') {
-      this.timeLeft += 5; this.showLargeText('⏳ +5s!')
     }
   }
 
@@ -199,7 +179,7 @@ export class MiningScene extends Scene {
 
   private resetSession(): void {
     for (const n of this.nodes) n.sprite.destroy()
-    this.nodes = []; this.globalEffects = []; this.eventTimer = 0; this.autoTimer = 0; this.comboIdleTimer = 0; this.rageActive = false; this.particleCount = 0
+    this.nodes = []; this.globalEffects = []; this.autoTimer = 0; this.comboIdleTimer = 0; this.rageActive = false; this.particleCount = 0
     this.ended = false
     const store = useGameStore.getState()
     store.resetCombo()
