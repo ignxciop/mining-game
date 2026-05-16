@@ -31,7 +31,6 @@ export function Sidebar({ onMenu }: Props) {
 
   const topResources = Object.entries(resources)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 6)
     .filter(([, v]) => v > 0)
 
   return (
