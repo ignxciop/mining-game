@@ -106,8 +106,6 @@ export function getRandomMineralByWeight(luckLevel = 0, prestigeLevel = 0, allow
     const tierBonus = tierBonuses[m.tier] ?? 0
     w = w * Math.exp(tierBonus * luckLevel * 0.04)
     if (m.id === 'clay' || m.id === 'shale') w = Math.max(3, w * Math.exp(-luckLevel * 0.06))
-    if (m.tier >= 6 && prestigeLevel < 1) w = 0
-    if (m.tier === 7 && prestigeLevel < 2) w = 0
     if (prestigeLevel >= 2 && m.tier >= 6) w = Math.max(w, 0.5)
     if (prestigeLevel >= 3 && m.tier === 7) w = Math.max(w, 0.3)
     return Math.max(0, w)
