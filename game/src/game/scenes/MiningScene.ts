@@ -10,7 +10,7 @@ import {
 } from '../../store/gameStore'
 import { EventBus } from '../EventBus'
 
-const BASE_RANGE = 80
+const BASE_RANGE = 40
 const MINERAL_COUNT = 8
 const MIN_SPACING = 90
 const COMBO_WINDOW = 1.5
@@ -27,10 +27,10 @@ function getMineralSize(): number {
 
 function getAreaDimensions(w: number, h: number) {
   if (getIsMobile()) {
-    const mw = Math.min(210, w * 0.46); const mh = Math.min(250, h * 0.31)
+    const mw = Math.min(420, w * 0.92); const mh = Math.min(500, h * 0.62)
     return { w: Math.round(mw), h: Math.round(mh) }
   }
-  const maxW = Math.min(260, w * 0.425); const maxH = Math.min(190, h * 0.275)
+  const maxW = Math.min(520, w * 0.85); const maxH = Math.min(380, h * 0.55)
   const aspect = 520 / 380; let aw = maxW; let ah = maxW / aspect
   if (ah > maxH) { ah = maxH; aw = maxH * aspect }
   return { w: Math.round(aw), h: Math.round(ah) }
