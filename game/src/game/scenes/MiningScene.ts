@@ -65,10 +65,12 @@ export class MiningScene extends Scene {
   private areaGfx!: GameObjects.Graphics
   private areaCX = 0; private areaCY = 0
   private areaW = 520; private areaH = 380
-  private timeLeft = SESSION_DURATION; private timerText!: GameObjects.Text
+  private timeLeft = SESSION_DURATION;   private timerText!: GameObjects.Text
+  private eventIndicator!: GameObjects.Text
   private ended = false
   private globalEffects: ActiveEffect[] = []
   private timeBonus = 0
+  private eventTimer = 0
   private autoTimer = 0
   private comboIdleTimer = 0
   private rageActive = false
@@ -86,7 +88,7 @@ export class MiningScene extends Scene {
   }
 
   create(): void {
-    this.ended = false; this.timeLeft = SESSION_DURATION; this.nodes = []; this.rageActive = false; this.comboIdleTimer = 0; this.autoTimer = 0; this.globalEffects = []
+    this.ended = false; this.timeLeft = SESSION_DURATION; this.nodes = []; this.rageActive = false; this.comboIdleTimer = 0; this.autoTimer = 0; this.eventTimer = 0; this.globalEffects = []
     this.areaCX = this.scale.width / 2; this.areaCY = this.scale.height / 2
     const dims = getAreaDimensions(this.scale.width, this.scale.height)
     this.areaW = dims.w; this.areaH = dims.h
@@ -103,6 +105,9 @@ export class MiningScene extends Scene {
     this.timerText = this.add.text(this.areaCX, this.areaCY - this.areaH / 2 - 50, '', {
       fontSize: '32px', fontStyle: 'bold', color: '#ffffff', stroke: '#000000', strokeThickness: 4,
     }).setOrigin(0.5)
+    this.eventIndicator = this.add.text(this.areaCX, this.areaCY - this.areaH / 2 - 90, '', {
+      fontSize: '14px', fontStyle: 'bold', color: '#ffd700', stroke: '#000', strokeThickness: 3,
+    }).setOrigin(0.5).setAlpha(0)
     this.drawArea()
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => { if (!this.ended) { this.mouseX = p.x; this.mouseY = p.y } })
     this.spawnAllNodes()
@@ -126,10 +131,13 @@ export class MiningScene extends Scene {
       if (store.combo > 0) { store.resetCombo(); this.rageActive = false }
     }
     this.updateGlobalEffects(delta)
+    this.eventTimer += delta / 1000
+    if (this.eventTimer > 12) { this.eventTimer = 0; this.trySpawnEvent() }
     this.updateNodes(delta)
     this.updateAutoExcavator(delta)
     this.drawCircle()
     this.updateTimerDisplay()
+    this.updateEventIndicator()
     this.updateRageFlash()
   }
 
@@ -149,6 +157,31 @@ export class MiningScene extends Scene {
       this.autoTimer = 0
       const alive = this.nodes.filter((n) => !n.block.isBroken())
       if (alive.length > 0) { const t = alive[randInt(0, alive.length - 1)]; t.block.takeDamage(3); this.showHitEffect(t, false) }
+    }
+  }
+
+  private trySpawnEvent(): void {
+    if (Math.random() > 0.3) return
+    const type = Math.random() < 0.5 ? 'double_drops' : 'energized'
+    this.globalEffects.push({ type, remaining: 5, value: 0 })
+    if (type === 'double_drops') {
+      this.showLargeText('🎯 ¡Recursos Dobles!')
+    } else {
+      this.showLargeText('⚡ ¡Energizado!')
+    }
+  }
+
+  private updateEventIndicator(): void {
+    const ee = this.globalEffects.filter((e) => e.type === 'double_drops' || e.type === 'energized')
+    if (ee.length > 0) {
+      const parts = ee.map((e) => {
+        const icon = e.type === 'double_drops' ? '🎯' : '⚡'
+        return `${icon} ${Math.ceil(e.remaining)}s`
+      })
+      this.eventIndicator.setText(parts.join('  '))
+      this.eventIndicator.setAlpha(1)
+    } else {
+      this.eventIndicator.setAlpha(0)
     }
   }
 
@@ -179,7 +212,7 @@ export class MiningScene extends Scene {
 
   private resetSession(): void {
     for (const n of this.nodes) n.sprite.destroy()
-    this.nodes = []; this.globalEffects = []; this.autoTimer = 0; this.comboIdleTimer = 0; this.rageActive = false; this.particleCount = 0
+    this.nodes = []; this.globalEffects = []; this.autoTimer = 0; this.eventTimer = 0; this.comboIdleTimer = 0; this.rageActive = false; this.particleCount = 0
     this.ended = false
     const store = useGameStore.getState()
     store.resetCombo()
@@ -276,9 +309,10 @@ export class MiningScene extends Scene {
       node.isTargeted = inRange
 
       if (inRange) {
+        const effInterval = this.globalEffects.some((e) => e.type === 'energized') ? interval / 2 : interval
         node.damageTimer += dt
-        while (node.damageTimer >= interval) {
-          node.damageTimer -= interval
+        while (node.damageTimer >= effInterval) {
+          node.damageTimer -= effInterval
           let dmg = baseDamage
           const prevStage = node.block.stageIndex
 
@@ -309,7 +343,7 @@ export class MiningScene extends Scene {
             totalAmount = Math.round(totalAmount * getDropMultiplier(efficiencyLevel))
             if (fortuneLevel > 0 && Math.random() < getFortuneChance(fortuneLevel) / 100) { totalAmount *= 2; this.showFortunePopup(node.x, node.y - 60, 'x2') }
             if (fortuneLevel >= 3 && Math.random() < getTripleDropChance(fortuneLevel) / 100) { totalAmount *= 3; this.showFortunePopup(node.x, node.y - 60, '💎 JACKPOT x3!') }
-
+            if (this.globalEffects.some((e) => e.type === 'double_drops')) totalAmount *= 2
             const mineralEffect = node.block.effect
             if (mineralEffect) this.applyMineralEffect(node, mineralEffect)
 
