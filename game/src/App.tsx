@@ -30,7 +30,7 @@ function App() {
         sessionStart.current = { ...current }
         setGains(null)
         setScreen('mining')
-        setTimeout(() => EventBus.emit('session-start'), 50)
+        useGameStore.getState().requestSessionRestart()
     }, [])
 
     useEffect(() => {

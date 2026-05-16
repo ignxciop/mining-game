@@ -76,6 +76,7 @@ export class MiningScene extends Scene {
   private rageFlash!: GameObjects.Graphics
   private particleCount = 0
   private damageTextPool: GameObjects.Text[] = []
+  private lastSessionRestartReq = 0
 
   constructor() { super('MiningScene') }
 
@@ -107,11 +108,16 @@ export class MiningScene extends Scene {
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => { if (!this.ended) { this.mouseX = p.x; this.mouseY = p.y } })
     this.spawnAllNodes()
     this.updateTimerDisplay()
-    EventBus.on('session-start', this.clearSession, this)
     EventBus.emit('current-scene-ready', this)
   }
 
   update(_time: number, delta: number): void {
+    const req = useGameStore.getState().sessionRestartReq
+    if (req !== this.lastSessionRestartReq) {
+      this.lastSessionRestartReq = req
+      this.resetSession()
+      return
+    }
     if (this.ended) return
     this.timeLeft -= delta / 1000
     if (this.timeLeft <= 0) { this.timeLeft = 0; this.endSession(); return }
@@ -191,7 +197,7 @@ export class MiningScene extends Scene {
 
   private endSession(): void { this.ended = true; this.circleGfx.clear(); EventBus.emit('session-ended') }
 
-  private clearSession(): void {
+  private resetSession(): void {
     for (const n of this.nodes) n.sprite.destroy()
     this.nodes = []; this.globalEffects = []; this.eventTimer = 0; this.autoTimer = 0; this.comboIdleTimer = 0; this.rageActive = false; this.particleCount = 0
     this.ended = false
@@ -473,7 +479,6 @@ export class MiningScene extends Scene {
   }
 
   shutdown(): void {
-    EventBus.off('session-start', this.clearSession, this)
     for (const n of this.nodes) n.sprite.destroy()
     this.nodes = []; this.globalEffects = []
   }

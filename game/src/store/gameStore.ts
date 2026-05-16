@@ -68,6 +68,7 @@ export interface GameState {
   unlockedMinerals: MineralId[]
   combo: number
   comboTimer: number
+  sessionRestartReq: number
 
   addResources: (resources: Partial<Record<string, number>>) => void
   purchaseSkill: (skillId: string, costResources: Record<string, number>, stat: string, statValue: number) => boolean
@@ -75,6 +76,7 @@ export interface GameState {
   setExcludedBranch: (branchId: string) => void
   incrementCombo: () => void
   resetCombo: () => void
+  requestSessionRestart: () => void
   doPrestige: () => void
   reset: () => void
 }
@@ -97,6 +99,7 @@ export const useGameStore = create<GameState>()(
       unlockedMinerals: [...STARTING_MINERALS],
       combo: 0,
       comboTimer: 0,
+      sessionRestartReq: 0,
 
       addResources: (resources) => {
         set((s) => {
@@ -189,6 +192,10 @@ export const useGameStore = create<GameState>()(
 
       resetCombo: () => {
         set({ combo: 0, comboTimer: 0 })
+      },
+
+      requestSessionRestart: () => {
+        set((s) => ({ sessionRestartReq: s.sessionRestartReq + 1 }))
       },
 
       doPrestige: () => {
